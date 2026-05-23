@@ -58,7 +58,7 @@ export async function streamChat(
   }
 
   const stream = await client.chat.completions.create({
-    model: 'qwen-max',
+    model: 'qwen3.7-max',
     max_tokens: 2048,
     stream: true,
     temperature: 0.7,

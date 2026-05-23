@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '缺少 type 或 data 字段' }, { status: 400 });
   }
 
-  // 根据 type 选择模型（统一使用 qwen-max）
+  // 根据 type 选择模型（统一使用 qwen3.7-max）
   const isDaily = type === 'daily';
-  const model = 'qwen-max';
+  const model = 'qwen3.7-max';
   const apiKey = process.env.DEEPSEEK_API_KEY || '';
 
   // 构建 prompt

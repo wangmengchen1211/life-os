@@ -93,7 +93,7 @@
 | 前端框架 | Next.js (App Router) + React + Tailwind CSS v4 + Framer Motion | 15.3 / 19 / 4.0 / 12.x |
 | 后端 | Next.js API Routes + Drizzle ORM + PostgreSQL | 15.3 / 0.45 / 15 |
 | 原生壳 | Capacitor (Server URL 模式) | 8.3.3 |
-| AI 服务 | Anthropic Claude + DeepSeek | SDK 0.95 / OpenAI 兼容 |
+| AI 服务 | 通义千问 qwen3.7-max（阿里云 DashScope） | OpenAI 兼容 |
 | 前端存储 | IndexedDB (`idb` 库) + sessionStorage (临时缓存) | idb 8.0 |
 | 后端存储 | PostgreSQL (Docker) | 15-alpine |
 | 部署 | Vercel (生产 Web) + Android Studio (APK 构建) | — |
