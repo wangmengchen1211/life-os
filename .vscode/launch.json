@@ -1,0 +1,68 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: debug server-side",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+:[0-9]+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Next.js: debug client-side (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3100",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack://_N_E/*": "${workspaceFolder}/*"
+      }
+    },
+    {
+      "name": "Next.js: build (debug)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "build"],
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Attach to Android Chrome (Capacitor WebView)",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "urlFilter": "*",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "presentation": {
+        "hidden": false,
+        "group": "capacitor",
+        "order": 10
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Next.js: debug full stack",
+      "configurations": [
+        "Next.js: debug server-side",
+        "Next.js: debug client-side (Chrome)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    }
+  ]
+}

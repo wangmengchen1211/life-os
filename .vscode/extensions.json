@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "Prisma.prisma",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "ms-azuretools.vscode-docker",
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "saoudrizwan.claude-dev",
+    "rooveterinaryinc.roo-cline",
+    "christian-kohler.path-intellisense",
+    "usernamehw.errorlens",
+    "yoavbls.pretty-ts-errors",
+    "Gruntfuggly.todo-tree",
+    "EditorConfig.EditorConfig",
+    "redhat.vscode-yaml",
+    "yzhang.markdown-all-in-one",
+    "Webnative.webnative"
+  ],
+  "unwantedRecommendations": [
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}

@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/* ===== Tailwind v4 Theme: 治愈系色板 ===== */
+@theme {
+  /* Healing Green - 柔和绿色系（主色调） */
+  --color-healing-green-50: #e8f5e9;
+  --color-healing-green-100: #c8e6c9;
+  --color-healing-green-200: #a5d6a7;
+  --color-healing-green-300: #81c784;
+  --color-healing-green-400: #66bb6a;
+
+  /* Healing Cream - 奶白/暖色 */
+  --color-healing-cream-50: #fefef9;
+  --color-healing-cream-100: #fdfdf5;
+  --color-healing-cream-200: #f9f9f2;
+
+  /* Healing Gray - 暖灰 */
+  --color-healing-gray-50: #f5f5f0;
+  --color-healing-gray-100: #e8e8e3;
+  --color-healing-gray-200: #9e9e99;
+  --color-healing-gray-300: #6b6b66;
+
+  /* Healing Mint - 薄荷蓝 */
+  --color-healing-mint-50: #e0f7fa;
+  --color-healing-mint-100: #b2ebf2;
+  --color-healing-mint-200: #80deea;
+
+  /* Healing Sunset - 晚霞粉 */
+  --color-healing-sunset-50: #fce4ec;
+  --color-healing-sunset-100: #f8bbd0;
+  --color-healing-sunset-200: #f48fb1;
+
+  /* Healing Lavender - 薰衣草紫 */
+  --color-healing-lavender-50: #f3e5f5;
+  --color-healing-lavender-100: #e1bee7;
+  --color-healing-lavender-200: #ce93d8;
+
+  /* 字体配置：中文字体优先 */
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
+}
+
+/* ===== CSS Variables: 治愈清透浅色主题 ===== */
+:root {
+  /* Typography System */
+  --font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text-h1: 1.75rem;    /* 28px */
+  --text-h2: 1.25rem;    /* 20px */
+  --text-body: 0.9375rem; /* 15px */
+  --text-small: 0.8125rem; /* 13px */
+  --weight-light: 300;
+  --weight-normal: 400;
+  --leading-loose: 1.8;
+  --leading-relaxed: 1.6;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.05em;
+
+  /* Spacing */
+  --space-breathe: 2rem;  /* 32px */
+  --space-section: 3rem;  /* 48px */
+
+  /* Colors */
+  --color-text: #2d3748;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-bg: #fafaf8;
+  --color-primary: #80cbc4;
+  --color-primary-light: #b2dfdb;
+
+  /* Legacy compat */
+  --bg-primary: #fafaf8;
+  --bg-secondary: #e6f5f2;
+  --bg-gradient: linear-gradient(135deg, #e8f5e9 0%, #e0f2f1 25%, #e3f2fd 50%, #fafaf8 75%, #fff8e1 100%);
+  --text-primary: #2d3748;
+  --text-secondary: #6b7280;
+  --accent: #80cbc4;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-bg-hover: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(255, 255, 255, 0.9);
+}
+
+/* 时间适应 — 浅色系内微变化 */
+[data-theme="morning"] {
+  --bg-primary: #eef7f9;
+  --bg-secondary: #e2f1f5;
+  --bg-gradient: linear-gradient(160deg, #ecf8fa 0%, #e0f2f6 35%, #e6f4f5 65%, #eef7f9 100%);
+  --accent: #4db6ac;
+}
+
+[data-theme="afternoon"] {
+  --bg-primary: #f0faf8;
+  --bg-secondary: #e6f5f2;
+  --bg-gradient: linear-gradient(160deg, #eef9f7 0%, #e4f5f0 35%, #e8f4f8 65%, #f0faf8 100%);
+  --accent: #4db6a0;
+}
+
+[data-theme="evening"] {
+  --bg-primary: #f0f4fa;
+  --bg-secondary: #e8eef7;
+  --bg-gradient: linear-gradient(160deg, #edf2f9 0%, #e6ecf5 35%, #eaeff8 65%, #f0f4fa 100%);
+  --accent: #7986cb;
+}
+
+/* ===== 基础样式 ===== */
+body {
+  font-family: var(--font-family);
+  font-size: var(--text-body);
+  line-height: var(--leading-loose);
+  color: var(--color-text);
+  letter-spacing: var(--tracking-wide);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS 底部安全区域 */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Capacitor 原生平台安全区域适配 */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* 确保触摸目标最小 44px */
+@media (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 隐藏滚动条工具类 */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 卡片通用样式 */
+@layer components {
+  .card-surface {
+    @apply bg-white/60 backdrop-blur-sm border border-black/5 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+  }
+  .card-surface-elevated {
+    @apply bg-white/70 backdrop-blur-sm border border-black/5 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)];
+  }
+}
+

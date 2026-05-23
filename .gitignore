@@ -1,0 +1,55 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Capacitor
+android/app/build/
+android/.gradle/
+ios/App/Pods/
+
+# VSCode (保留共享配置 .vscode/、.clinerules/、.roo/、.github/、.qoder/；仅忽略个人状态)
+.vscode/*.log
+.history/
+
+# Cline / Roo 本地缓存
+.cline/
+.roo/cache/
+.roo/logs/

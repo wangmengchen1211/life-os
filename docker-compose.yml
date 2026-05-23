@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mindos-db
+    environment:
+      POSTGRES_USER: mindos
+      POSTGRES_PASSWORD: mindos_dev_123
+      POSTGRES_DB: mindos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

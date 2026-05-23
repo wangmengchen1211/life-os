@@ -1,0 +1,140 @@
+{
+  "// editor": "============== Editor ==============",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.formatOnSave": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.rulers": [100],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+
+  "// files": "============== Files ==============",
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.associations": {
+    "*.mdx": "markdown",
+    "drizzle.config.ts": "typescript",
+    "capacitor.config.ts": "typescript",
+    "next.config.js": "javascript",
+    ".roomodes": "yaml",
+    ".clinerules/*.md": "markdown"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/tsconfig.tsbuildinfo": true,
+    "android/app/build": true,
+    "android/.gradle": true,
+    "android/build": true,
+    "android/.idea": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/pnpm-lock.yaml": true,
+    "**/tsconfig.tsbuildinfo": true,
+    "android/app/build": true,
+    "android/.gradle": true,
+    ".vercel": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "android/.gradle/**": true,
+    "android/app/build/**": true
+  },
+
+  "// typescript": "============== TypeScript ==============",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.inlayHints.parameterNames.enabled": "literals",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  "// eslint": "============== ESLint (flat config) ==============",
+  "eslint.useFlatConfig": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.run": "onType",
+
+  "// tailwind": "============== Tailwind CSS v4 ==============",
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "tailwindCSS.experimental.configFile": "postcss.config.mjs",
+
+  "// language-overrides": "============== Per-Language ==============",
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.tabSize": 2
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.tabSize": 2
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "files.trimTrailingWhitespace": false
+  },
+  "[yaml]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+
+  "// terminal": "============== Terminal ==============",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.cwd": "${workspaceFolder}",
+
+  "// npm": "============== Package Manager ==============",
+  "npm.packageManager": "pnpm",
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+
+  "// emmet": "============== Emmet ==============",
+  "emmet.includeLanguages": {
+    "typescriptreact": "html",
+    "javascriptreact": "html"
+  },
+
+  "// git": "============== Git ==============",
+  "git.autofetch": true,
+  "git.confirmSync": false,
+
+  "// ai-agents": "============== Cline / Roo / Copilot ==============",
+  "cline.customInstructions": "本工作区遵循 .clinerules/ 与 .qoder/constitution.md。任务开始前先读 .qoder/README.md 场景索引。严禁读写 .env*。所有命令用 pnpm，cwd 为 life-os 根。",
+  "roo-cline.customInstructions": "本工作区遵循 .roo/rules/ 与 .qoder/constitution.md。任务开始前先读 .qoder/README.md。严禁读写 .env*。",
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true
+}
