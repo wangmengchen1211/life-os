@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+  // 账单查询使用 DashScope（推理层）的 Key，因为余额接口是 DashScope 的
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const baseUrl = process.env.ANTHROPIC_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
   const consoleUrl = 'https://dashscope.console.aliyun.com/';
 
   try {

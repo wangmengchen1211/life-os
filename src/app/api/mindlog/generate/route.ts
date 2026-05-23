@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { streamChatDeepSeek } from '@/lib/ai/providers/deepseek';
 import {
   buildDailyMindlogPrompt,
   buildWeeklyMindlogPrompt,
@@ -27,10 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '缺少 type 或 data 字段' }, { status: 400 });
   }
 
-  // 根据 type 选择模型（统一使用 qwen3.7-max）
+  // 根据 type 选择模型（语言任务统一使用 DeepSeek V4 Pro）
   const isDaily = type === 'daily';
-  const model = 'qwen3.7-max';
-  const apiKey = process.env.DEEPSEEK_API_KEY || '';
 
   // 构建 prompt
   let prompt: { system: string; user: string };
@@ -48,57 +46,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '无效的 type，仅支持 daily/weekly/monthly' }, { status: 400 });
   }
 
-  // 创建 OpenAI 客户端
-  const client = new OpenAI({
-    baseURL: process.env.DEEPSEEK_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    apiKey,
-  });
+  try {
+    const stream = await streamChatDeepSeek(prompt.system, prompt.user);
 
-  const encoder = new TextEncoder();
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      let fullText = '';
-      try {
-        const completion = await client.chat.completions.create({
-          model,
-          max_tokens: 2048,
-          stream: true,
-          temperature: 0.7,
-          messages: [
-            { role: 'system', content: prompt.system },
-            { role: 'user', content: prompt.user },
-          ],
-        });
-
-        for await (const chunk of completion) {
-          const text = chunk.choices[0]?.delta?.content || '';
-          if (text) {
-            fullText += text;
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: 'text', content: text })}\n\n`)
-            );
-          }
-        }
-
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'done', content: fullText })}\n\n`)
-        );
-      } catch (error: any) {
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'error', content: error.message || 'Unknown error' })}\n\n`)
-        );
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
-  });
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'AI 服务调用失败' },
+      { status: 500 }
+    );
+  }
 }

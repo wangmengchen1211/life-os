@@ -5,7 +5,7 @@ let _client: OpenAI | null = null;
 function getClient() {
   if (!_client) {
     _client = new OpenAI({
-      baseURL: process.env.DEEPSEEK_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
       apiKey: process.env.DEEPSEEK_API_KEY || 'placeholder',
       timeout: 60_000, // 60s 超时
     });
@@ -18,9 +18,9 @@ export async function streamChatDeepSeek(
   userContent: string
 ): Promise<ReadableStream> {
   const encoder = new TextEncoder();
-  
+
   const stream = await getClient().chat.completions.create({
-    model: 'qwen3.7-max',
+    model: 'deepseek-v4-pro',
     max_tokens: 2048,
     stream: true,
     temperature: 0.7,

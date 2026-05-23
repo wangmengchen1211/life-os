@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { streamChatDeepSeek } from '@/lib/ai/providers/deepseek';
+import { streamChat } from '@/lib/ai/service';
 import {
   KNOWLEDGE_TAGGING_SYSTEM_PROMPT,
   buildKnowledgeTaggingUserPrompt,
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '内容不能为空' }, { status: 400 });
   }
 
-  if (!process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK_API_KEY === 'placeholder') {
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'placeholder') {
     return NextResponse.json({ error: 'AI服务未配置' }, { status: 503 });
   }
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const stream = await streamChatDeepSeek(KNOWLEDGE_TAGGING_SYSTEM_PROMPT, userContent);
+    const stream = await streamChat(KNOWLEDGE_TAGGING_SYSTEM_PROMPT, userContent);
 
     return new Response(stream, {
       headers: {
