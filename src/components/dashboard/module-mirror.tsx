@@ -13,16 +13,8 @@ import {
   type MirrorSession,
 } from '@/lib/storage/mirror-store';
 import { buildUserProfilePrompt } from '@/lib/ai/prompts/mirror-insight';
+import { buildRecommendedTopics, FALLBACK_PROMPTS } from '@/lib/ai/recommend-topics';
 import { RichText } from '@/components/shared/rich-text';
-
-// ─── Quick Prompts ───────────────────────────────────────────────────────────
-
-const QUICK_PROMPTS = [
-  '分析我最近的情绪变化',
-  '我的思维有什么盲区？',
-  '根据我的兴趣推荐学习方向',
-  '帮我梳理最近的困惑',
-];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -39,6 +31,8 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
   const [streamText, setStreamText] = useState('');
   const [userProfile, setUserProfile] = useState<string>('');
   const [initialQuestionSent, setInitialQuestionSent] = useState(false);
+  // 推荐话题：基于最近数据动态生成（加载完成前用静态话题兜底）
+  const [quickPrompts, setQuickPrompts] = useState<string[]>([]);
 
   const [imageAttachment, setImageAttachment] = useState<string | null>(null);
   const [fileAttachment, setFileAttachment] = useState<{ name: string; content: string } | null>(null);
@@ -57,6 +51,12 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
   useEffect(() => {
     loadMessages();
     loadProfile();
+    // 动态推荐话题：从最近数据（日记/Todo/知识库/心智日志）提取
+    let isMounted = true;
+    buildRecommendedTopics(4)
+      .then((qs) => { if (isMounted) setQuickPrompts(qs.map((q) => q.text)); })
+      .catch(() => {});
+    return () => { isMounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
@@ -331,7 +331,7 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
               我是你的镜像洞察伙伴，了解你的思维轨迹和情感变化。试试问我...
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              {QUICK_PROMPTS.map((prompt) => (
+              {(quickPrompts.length > 0 ? quickPrompts : FALLBACK_PROMPTS.slice(0, 4)).map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => handleSend(prompt)}

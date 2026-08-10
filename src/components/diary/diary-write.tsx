@@ -2,9 +2,10 @@
 
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save, Loader2, ImagePlus, X } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, ImagePlus, X, Calendar } from 'lucide-react';
 import { addEntry } from '@/lib/storage/diary-store';
 import { compressImage } from '@/lib/utils/image-compress';
+import { toDateInputValue, dateInputToISO } from '@/lib/utils/date';
 import { useToast } from '@/components/shared/toast';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -12,6 +13,8 @@ import { useToast } from '@/components/shared/toast';
 interface DiaryWriteProps {
   onSaved?: () => void;
   onCancel?: () => void;
+  /** 预填日期（ISO 字符串），缺省为今天 */
+  initialDate?: string;
 }
 
 // ─── Mood Options ────────────────────────────────────────────────────────────
@@ -92,15 +95,20 @@ function extractJSON(text: string): any {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function DiaryWrite({ onSaved, onCancel }: DiaryWriteProps) {
+export default function DiaryWrite({ onSaved, onCancel, initialDate }: DiaryWriteProps) {
   const { toast } = useToast();
   const [content, setContent] = useState('');
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  // 日记日期（YYYY-MM-DD）：日历点选日期进入时预填该日期，否则为今天
+  const [dateValue, setDateValue] = useState(() =>
+    toDateInputValue(initialDate ?? new Date().toISOString()),
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wordCount = content.length;
+  const isToday = dateValue === toDateInputValue(new Date().toISOString());
 
   function toggleMood(mood: string) {
     setSelectedMoods((prev) => {
@@ -153,6 +161,8 @@ export default function DiaryWrite({ onSaved, onCancel }: DiaryWriteProps) {
         moodTags: selectedMoods,
         keyThemes: [],
         images: images.length > 0 ? images : undefined,
+        // 按所选日期落库（本地中午转 ISO，避免时区偏移导致日期跳变）
+        createdAt: dateInputToISO(dateValue),
       });
 
       // 后台静默触发 AI 反馈（不阻塞用户）
@@ -185,6 +195,20 @@ export default function DiaryWrite({ onSaved, onCancel }: DiaryWriteProps) {
           <ArrowLeft className="w-5 h-5 text-[var(--text-secondary)]" />
         </button>
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">写日记</h2>
+      </div>
+
+      {/* 日记日期选择（支持补写过去/未来的日记） */}
+      <div className="mb-3 flex items-center gap-2">
+        <Calendar size={15} className="text-[var(--text-secondary)] shrink-0" />
+        <input
+          type="date"
+          value={dateValue}
+          onChange={(e) => setDateValue(e.target.value)}
+          className="text-sm bg-white/50 border border-white/60 rounded-lg px-3 py-1.5 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)]/50 transition-all"
+        />
+        {isToday && (
+          <span className="text-xs text-[var(--text-secondary)]">今天</span>
+        )}
       </div>
 
       {/* 情绪标签选择器 */}

@@ -11,6 +11,10 @@ import { SkeletonCard } from '@/components/ui/skeleton';
 interface DiaryListProps {
   onSelectEntry?: (id: number) => void;
   onWrite?: () => void;
+  /** 点击没有日记的日期 → 以该日期进入写日记页（ISO 字符串） */
+  onWriteAt?: (date: string) => void;
+  /** 写日记返回后聚焦的日期（ISO），用于跳转到刚写的月份 */
+  focusDate?: string | null;
   refreshKey?: number;
 }
 
@@ -45,10 +49,15 @@ const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function DiaryList({ onSelectEntry, onWrite, refreshKey }: DiaryListProps) {
+export default function DiaryList({ onSelectEntry, onWrite, onWriteAt, focusDate, refreshKey }: DiaryListProps) {
   const today = new Date();
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  // 从写日记返回时，日历直接定位到刚写的日期所在月份
+  const [currentYear, setCurrentYear] = useState(() =>
+    focusDate ? new Date(focusDate).getFullYear() : today.getFullYear(),
+  );
+  const [currentMonth, setCurrentMonth] = useState(() =>
+    focusDate ? new Date(focusDate).getMonth() : today.getMonth(),
+  );
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -168,8 +177,14 @@ export default function DiaryList({ onSelectEntry, onWrite, refreshKey }: DiaryL
 
   const handleDayClick = (day: number) => {
     const dayEntries = dateEntryMap.get(day);
-    if (dayEntries && dayEntries.length > 0 && onSelectEntry) {
-      onSelectEntry(dayEntries[0].id!);
+    if (dayEntries && dayEntries.length > 0) {
+      if (onSelectEntry) onSelectEntry(dayEntries[0].id!);
+      return;
+    }
+    // 没有日记的日期：直接进入写日记页并预填该日期（支持补写过去/未来）
+    if (onWriteAt) {
+      const date = new Date(currentYear, currentMonth, day, 12, 0, 0);
+      onWriteAt(date.toISOString());
     }
   };
 
@@ -247,10 +262,9 @@ export default function DiaryList({ onSelectEntry, onWrite, refreshKey }: DiaryL
                   relative w-9 h-9 rounded-lg flex items-center justify-center text-xs
                   transition-all duration-150
                   ${isToday(day) ? 'border-2 border-[var(--accent)] font-semibold' : ''}
-                  ${hasEntry ? 'cursor-pointer hover:bg-white/50' : 'cursor-default'}
+                  cursor-pointer hover:bg-white/50
                 `}
                 style={{ color: 'var(--text-primary)' }}
-                disabled={!hasEntry}
               >
                 {day}
                 {hasEntry && moodColor && (

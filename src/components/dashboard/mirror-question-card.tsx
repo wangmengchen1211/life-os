@@ -4,26 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Disc } from 'lucide-react';
-import { getLatestByType } from '@/lib/storage/mindlog-store';
-import { listEntries } from '@/lib/storage/diary-store';
-
-// ─── 静态推荐问题池 ──────────────────────────────────────────────────────────
-
-const BASE_PROMPTS = [
-  '分析我最近的情绪变化',
-  '我的思维有什么盲区？',
-  '根据我的兴趣推荐学习方向',
-  '帮我梳理最近的困惑',
-  '我最近的状态怎么样？',
-  '有什么我忽视的信号？',
-];
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface RecommendedQuestion {
-  text: string;
-  source: 'profile' | 'static';
-}
+import { buildRecommendedTopics, type RecommendedQuestion } from '@/lib/ai/recommend-topics';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -33,47 +14,20 @@ export function MirrorQuestionCard() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // 基于用户画像生成推荐问题
+  // 基于最近数据（心智日志/日记/Todo/知识库）生成推荐问题
   useEffect(() => {
     let isMounted = true;
 
     async function loadQuestions() {
       try {
-        const result: RecommendedQuestion[] = [];
-
-        // 从心智日志提取关键词生成个性化问题
-        const latestLog = await getLatestByType('daily').catch(() => undefined);
-        if (latestLog?.keywords) {
-          const topWord = latestLog.keywords.split('·')[0].trim();
-          if (topWord) {
-            result.push({ text: `「${topWord}」对我的影响是什么？`, source: 'profile' });
-          }
-        }
-
-        // 从日记情绪标签生成问题
-        const entries = await listEntries({ limit: 7 }).catch(() => []);
-        const recentMoods = entries
-          .flatMap((e) => e.moodTags || [])
-          .filter(Boolean);
-        const moodSet = [...new Set(recentMoods)];
-        if (moodSet.length > 0) {
-          const mood = moodSet[Math.floor(Math.random() * moodSet.length)];
-          result.push({ text: `为什么最近总感到「${mood}」？`, source: 'profile' });
-        }
-
-        // 补充静态问题
-        const staticPrompts = BASE_PROMPTS.sort(() => Math.random() - 0.5).slice(0, 3);
-        for (const p of staticPrompts) {
-          result.push({ text: p, source: 'static' });
-        }
-
+        const result = await buildRecommendedTopics(5);
         if (isMounted) {
           setQuestions(result);
           setLoading(false);
         }
       } catch {
         if (isMounted) {
-          setQuestions(BASE_PROMPTS.slice(0, 4).map((t) => ({ text: t, source: 'static' as const })));
+          setQuestions([]);
           setLoading(false);
         }
       }

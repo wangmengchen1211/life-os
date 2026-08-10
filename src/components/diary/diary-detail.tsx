@@ -12,6 +12,7 @@ import {
   Save,
   X,
   ImagePlus,
+  Calendar,
 } from 'lucide-react';
 import {
   getEntry,
@@ -20,6 +21,7 @@ import {
   type DiaryEntry,
 } from '@/lib/storage/diary-store';
 import { compressImage } from '@/lib/utils/image-compress';
+import { toDateInputValue, dateInputToISO } from '@/lib/utils/date';
 import { RichText } from '@/components/shared/rich-text';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -98,6 +100,11 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
   // Delete confirm
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // 日期编辑（修改日记日期）
+  const [editingDate, setEditingDate] = useState(false);
+  const [dateValue, setDateValue] = useState('');
+  const [savingDate, setSavingDate] = useState(false);
+
   // AI feedback re-fetch
   const [fetchingAI, setFetchingAI] = useState(false);
   // 流式预览（AI 回信逐字出现）
@@ -142,6 +149,29 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
       console.error('Failed to update entry:', err);
     } finally {
       setSavingEdit(false);
+    }
+  }
+
+  // ─── Date edit handlers ──────────────────────────────────────────────────
+
+  function startEditDate() {
+    if (!entry) return;
+    setDateValue(toDateInputValue(entry.createdAt));
+    setEditingDate(true);
+  }
+
+  async function saveDate() {
+    if (!entry || !dateValue) return;
+    setSavingDate(true);
+    try {
+      const createdAt = dateInputToISO(dateValue);
+      await updateEntry(entryId, { createdAt });
+      setEntry({ ...entry, createdAt });
+      setEditingDate(false);
+    } catch (err) {
+      console.error('Failed to update entry date:', err);
+    } finally {
+      setSavingDate(false);
     }
   }
 
@@ -273,9 +303,20 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
           >
             <ArrowLeft className="w-5 h-5 text-[var(--text-secondary)]" />
           </button>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-            {formatDate(entry.createdAt)}
-          </h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              {formatDate(entry.createdAt)}
+            </h2>
+            {!editing && (
+              <button
+                onClick={startEditDate}
+                className="p-1.5 rounded-lg hover:bg-white/40 transition-colors"
+                aria-label="修改日期"
+              >
+                <Calendar className="w-4 h-4 text-[var(--text-secondary)]" />
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1">
           {editing ? (
@@ -320,6 +361,44 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
           )}
         </div>
       </div>
+
+      {/* ─── Date Edit Bar ──────────────────────────────────────────────────── */}
+      {editingDate && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="mb-3 flex items-center gap-2 px-1"
+        >
+          <input
+            type="date"
+            value={dateValue}
+            onChange={(e) => setDateValue(e.target.value)}
+            className="text-sm bg-white/50 border border-white/60 rounded-lg px-3 py-1.5 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)]/50 transition-all"
+          />
+          <button
+            onClick={saveDate}
+            disabled={savingDate || !dateValue}
+            className="p-1.5 rounded-lg hover:bg-white/40 transition-colors disabled:opacity-40"
+            aria-label="确认修改日期"
+          >
+            {savingDate ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+            ) : (
+              <Save className="w-4 h-4 text-[var(--accent)]" />
+            )}
+          </button>
+          <button
+            onClick={() => setEditingDate(false)}
+            className="p-1.5 rounded-lg hover:bg-white/40 transition-colors"
+            aria-label="取消修改日期"
+          >
+            <X className="w-4 h-4 text-[var(--text-secondary)]" />
+          </button>
+          <span className="text-xs text-[var(--text-secondary)]">
+            保存后将移至新日期
+          </span>
+        </motion.div>
+      )}
 
       {/* ─── Delete Confirmation ────────────────────────────────────────────── */}
       {confirmDelete && (
