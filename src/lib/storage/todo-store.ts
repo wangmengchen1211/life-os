@@ -1,9 +1,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert, notifyDelete } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface Todo {
   id?: number; // auto-increment
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   title: string;
   date: string; // YYYY-MM-DD 格式
   isCompleted: boolean;
@@ -76,6 +79,7 @@ export async function addTodo(
     createdAt: todo.createdAt || new Date().toISOString(),
   };
   const id = await db.add('todos', record);
+  notifyUpsert('todos', id as number);
   return id as number;
 }
 
@@ -98,11 +102,14 @@ export async function updateTodo(
     id,
   };
   await db.put('todos', updated);
+  notifyUpsert('todos', id);
 }
 
 export async function deleteTodo(id: number): Promise<void> {
   const db = await initDB();
+  const existing = await db.get('todos', id);
   await db.delete('todos', id);
+  notifyDelete('todos', existing?.cloudId);
 }
 
 export async function toggleComplete(id: number): Promise<Todo> {
@@ -120,6 +127,7 @@ export async function toggleComplete(id: number): Promise<Todo> {
   }
 
   await db.put('todos', updated);
+  notifyUpsert('todos', id);
   return updated;
 }
 

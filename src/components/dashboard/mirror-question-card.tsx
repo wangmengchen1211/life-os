@@ -101,7 +101,7 @@ export function MirrorQuestionCard() {
   // 加载态
   if (loading) {
     return (
-      <div className="w-full h-[112px] rounded-2xl bg-white/30 backdrop-blur-sm border border-black/5 flex items-center justify-center">
+      <div className="w-full h-[96px] md:h-[112px] rounded-2xl bg-white/30 backdrop-blur-sm border border-black/5 flex items-center justify-center">
         <motion.div
           animate={{ opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -120,7 +120,7 @@ export function MirrorQuestionCard() {
 
   return (
     <div
-      className="w-full h-[112px] rounded-2xl bg-white/30 backdrop-blur-sm border border-black/5 flex items-center gap-2.5 px-3 cursor-pointer hover:bg-white/50 transition-colors group"
+      className="w-full h-[96px] md:h-[112px] rounded-2xl bg-white/30 backdrop-blur-sm border border-black/5 flex items-center gap-2.5 px-3 cursor-pointer hover:bg-white/50 transition-colors group"
       onClick={handleClick}
     >
       {/* 洞见图标 — 与导航栏中的 Disc 图标保持一致，使用紫色 */}

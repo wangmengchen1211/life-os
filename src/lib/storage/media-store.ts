@@ -1,4 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert, notifyDelete } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -6,6 +7,8 @@ export type Platform = 'wechat' | 'xiaohongshu' | 'zhihu' | 'juejin' | 'douyin' 
 
 export interface MediaConfig {
   id?: number; // auto-increment
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   platform: Platform;
   rssUrl: string;
   nickname: string;
@@ -16,6 +19,8 @@ export interface MediaConfig {
 
 export interface SyncLog {
   id?: number; // auto-increment
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   configId: number;
   status: 'success' | 'fail';
   itemsCount: number;
@@ -66,6 +71,7 @@ export async function addConfig(
     createdAt: config.createdAt || new Date().toISOString(),
   };
   const id = await db.add('configs', record);
+  notifyUpsert('media_configs', id as number);
   return id as number;
 }
 
@@ -88,11 +94,26 @@ export async function updateConfig(
     id,
   };
   await db.put('configs', updated);
+  notifyUpsert('media_configs', id);
 }
 
 export async function deleteConfig(id: number): Promise<void> {
   const db = await initDB();
-  await db.delete('configs', id);
+  const existing = await db.get('configs', id);
+  // 级联删除关联同步日志
+  const logs: SyncLog[] = await db.getAllFromIndex('sync_logs', 'by-config', id);
+  const tx = db.transaction(['configs', 'sync_logs'], 'readwrite');
+  await tx.objectStore('configs').delete(id);
+  for (const log of logs) {
+    if (log.id) await tx.objectStore('sync_logs').delete(log.id);
+  }
+  await tx.done;
+
+  // 同步删除云端
+  notifyDelete('media_configs', existing?.cloudId);
+  for (const log of logs) {
+    notifyDelete('media_sync_logs', log.cloudId);
+  }
 }
 
 // ─── Sync Logs ──────────────────────────────────────────────────────────────
@@ -106,6 +127,7 @@ export async function addSyncLog(
     syncAt: log.syncAt || new Date().toISOString(),
   };
   const id = await db.add('sync_logs', record);
+  notifyUpsert('media_sync_logs', id as number);
   return id as number;
 }
 

@@ -1,9 +1,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface MindLogEntry {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   type: 'daily' | 'weekly' | 'monthly';
   periodStart: string;   // ISO date string (YYYY-MM-DD)
   periodEnd: string;     // ISO date string (YYYY-MM-DD)
@@ -50,6 +53,7 @@ export async function initDB(): Promise<IDBPDatabase> {
 export async function addEntry(entry: Omit<MindLogEntry, 'id'>): Promise<number> {
   const db = await initDB();
   const id = await db.add('entries', entry);
+  notifyUpsert('mindlog_reports', id as number);
   return id as number;
 }
 
@@ -87,8 +91,10 @@ export async function upsertEntry(entry: Omit<MindLogEntry, 'id'>): Promise<numb
   if (existing) {
     const updated: MindLogEntry = { ...entry, id: existing.id };
     await db.put('entries', updated);
+    notifyUpsert('mindlog_reports', existing.id as number);
     return existing.id as number;
   }
   const id = await db.add('entries', entry);
+  notifyUpsert('mindlog_reports', id as number);
   return id as number;
 }

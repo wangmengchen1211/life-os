@@ -1,51 +1,77 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getIronSession } from 'iron-session';
-import { SessionData, getSessionOptions } from '@/lib/auth/session';
+import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+
   const { pathname } = request.nextUrl;
 
-  // 不拦截的路径
-  // 注意：/api/feishu/oauth/callback 必须公开——飞书 OAuth 跳回来时若 session 校验异常，
-  // 返回 401 JSON 会让弹窗黑屏且无法回传 token。callback 自身用 state 做 CSRF 防护，
-  // 且只返回 HTML 给弹窗让其 postMessage/localStorage 回传，token 的最终存储由主窗口（带 session）完成。
+  // 公开路径（无需登录）
   const publicPaths = [
     '/login',
     '/privacy-policy',
-    '/api/auth',
     '/api/feishu/oauth/callback',
-    '/api/mirror/chat',
-    '/api/mindlog/generate',
-    '/api/daily-echo',
-    '/api/diary/feedback',
-    '/api/knowledge',
-    '/api/ai/billing',
     '/_next',
     '/favicon.ico',
     '/icons',
     '/manifest',
+    '/sw.js',
+    '/workbox-',
   ];
-  if (publicPaths.some(path => pathname.startsWith(path))) {
-    return NextResponse.next();
-  }
+  const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
-  // 检查 session
-  const response = NextResponse.next();
-  const userAgent = request.headers.get('user-agent');
-  const session = await getIronSession<SessionData>(request, response, getSessionOptions(userAgent));
-
-  if (!session.isLoggedIn) {
-    // API 路由返回 401 JSON，避免重定向导致 fetch 收到 HTML
+  // 未登录用户访问受保护页面 → 重定向到登录页
+  if (!user && !isPublic) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
-    return NextResponse.redirect(new URL('/login', request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
   }
 
-  return response;
+  // 已登录用户访问登录页 → 重定向到主页
+  if (user && pathname === '/login') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
+  }
+
+  return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons|manifest).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons|manifest|sw.js|workbox-).*)'],
 };

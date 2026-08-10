@@ -20,6 +20,7 @@ import {
   type DiaryEntry,
 } from '@/lib/storage/diary-store';
 import { compressImage } from '@/lib/utils/image-compress';
+import { RichText } from '@/components/shared/rich-text';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,24 @@ function extractJSON(text: string): any {
   } catch {
     return null;
   }
+}
+
+/**
+ * 流式增量提取 JSON 中 feedback 字段的最长前缀
+ * - AI 按 {"feedback": "...", "moodTags": [...], "keyThemes": [...]} 顺序输出
+ * - JSON 未闭合时也能提取已输出的部分，实现打字机效果
+ */
+function extractFeedbackPreview(text: string): string {
+  const m = text.match(/"feedback"\s*:\s*"((?:[^"\\]|\\.)*)/);
+  if (!m) return '';
+  let v = m[1];
+  // 去掉末尾可能未闭合的转义符
+  if (v.endsWith('\\')) v = v.slice(0, -1);
+  return v
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, '\\');
 }
 
 function formatDate(iso: string): string {
@@ -81,6 +100,8 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
 
   // AI feedback re-fetch
   const [fetchingAI, setFetchingAI] = useState(false);
+  // 流式预览（AI 回信逐字出现）
+  const [streamingFeedback, setStreamingFeedback] = useState('');
 
   // ─── Load entry ──────────────────────────────────────────────────────────
 
@@ -140,6 +161,7 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
   async function refetchAIFeedback() {
     if (!entry) return;
     setFetchingAI(true);
+    setStreamingFeedback('');
     try {
       const res = await fetch('/api/diary/feedback', {
         method: 'POST',
@@ -168,8 +190,13 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
           if (!line.startsWith('data: ')) continue;
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.type === 'text') fullText += data.content;
-            else if (data.type === 'done') fullText = data.content;
+            if (data.type === 'text') {
+              fullText += data.content;
+              // 流式渲染：增量提取 feedback 字段，实现打字机效果
+              setStreamingFeedback(extractFeedbackPreview(fullText));
+            } else if (data.type === 'done') {
+              fullText = data.content;
+            }
           } catch {}
         }
       }
@@ -178,8 +205,12 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
       if (buffer.trim().startsWith('data: ')) {
         try {
           const data = JSON.parse(buffer.trim().slice(6));
-          if (data.type === 'text') fullText += data.content;
-          else if (data.type === 'done') fullText = data.content;
+          if (data.type === 'text') {
+            fullText += data.content;
+            setStreamingFeedback(extractFeedbackPreview(fullText));
+          } else if (data.type === 'done') {
+            fullText = data.content;
+          }
         } catch {}
       }
 
@@ -197,6 +228,7 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
       console.error('Failed to fetch AI feedback:', err);
     } finally {
       setFetchingAI(false);
+      setStreamingFeedback('');
     }
   }
 
@@ -463,13 +495,23 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
           <span className="text-sm font-medium text-purple-700">未来回音</span>
         </div>
 
-        {entry.aiFeedback ? (
+        {fetchingAI && streamingFeedback ? (
+          /* 流式输出中：逐字显示回信 */
           <>
-            <p className="text-[15px] leading-[1.8] text-[var(--text-primary)] whitespace-pre-wrap mb-3">
-              {entry.aiFeedback}
-            </p>
+            <RichText content={streamingFeedback} />
+            <span className="inline-block w-1 h-3.5 bg-purple-400 ml-0.5 animate-pulse rounded-full mt-2" />
+          </>
+        ) : fetchingAI ? (
+          /* 等待首 token（AI 思考中） */
+          <div className="flex items-center gap-2 text-sm text-purple-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>AI 正在思考中...</span>
+          </div>
+        ) : entry.aiFeedback ? (
+          <>
+            <RichText content={entry.aiFeedback} />
             {entry.keyThemes.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 mt-3">
                 {entry.keyThemes.map((theme) => (
                   <span
                     key={theme}
@@ -483,35 +525,24 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
           </>
         ) : (
           <div className="flex items-center gap-3">
-            {fetchingAI ? (
-              <div className="flex items-center gap-2 text-sm text-purple-500">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>AI 正在思考中...</span>
-              </div>
-            ) : (
-              <button
-                onClick={refetchAIFeedback}
-                className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>获取 AI 回信</span>
-              </button>
-            )}
+            <button
+              onClick={refetchAIFeedback}
+              className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>获取 AI 回信</span>
+            </button>
           </div>
         )}
 
         {/* Re-fetch button when feedback exists */}
-        {entry.aiFeedback && (
+        {entry.aiFeedback && !fetchingAI && (
           <button
             onClick={refetchAIFeedback}
             disabled={fetchingAI}
             className="mt-3 flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-600 transition-colors disabled:opacity-50"
           >
-            {fetchingAI ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <RefreshCw className="w-3 h-3" />
-            )}
+            <RefreshCw className="w-3 h-3" />
             <span>重新获取</span>
           </button>
         )}

@@ -1,4 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { getUserId } from '@/lib/sync/cloud';
+import { createClient } from '@/lib/supabase/client';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,6 +31,9 @@ async function getDB() {
   });
 }
 
+/** 导出给同步层使用 */
+export const initDB = getDB;
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -55,14 +60,34 @@ export async function saveUserProfile(
   data: Partial<Omit<UserProfile, 'id'>>,
 ): Promise<void> {
   let db: IDBPDatabase | null = null;
+  let saved: UserProfile;
   try {
     db = await getDB();
     const existing =
       (await db.get(STORE_NAME, 'default')) || { ...DEFAULT_PROFILE, updatedAt: Date.now() };
-    await db.put(STORE_NAME, { ...existing, ...data, updatedAt: Date.now() });
+    saved = { ...existing, ...data, updatedAt: Date.now() };
+    await db.put(STORE_NAME, saved);
   } catch (e) {
     console.error('[profile-store] save failed:', e);
+    return;
   } finally {
     if (db) db.close();
+  }
+
+  // 已登录时同步到云端（profiles.id = auth.uid()，直接 upsert）
+  try {
+    const userId = await getUserId();
+    if (!userId) return;
+    const supabase = createClient();
+    const { error } = await supabase.from('profiles').upsert({
+      id: userId,
+      nickname: saved.nickname,
+      signature: saved.signature,
+      theme_mode: saved.themeMode ?? 'auto',
+      updated_at: new Date().toISOString(),
+    });
+    if (error) console.warn('[profile-store] 云端保存失败:', error.message);
+  } catch (e) {
+    console.warn('[profile-store] 云端保存失败:', e);
   }
 }

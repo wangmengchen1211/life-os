@@ -153,9 +153,9 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="h-[100dvh] overflow-hidden flex flex-col relative">
-      {/* 主内容区 — 单屏布局，不允许滚动 */}
-      <div className="flex-1 flex flex-col px-6 pt-12 pb-4 max-w-[800px] w-full mx-auto min-h-0 overflow-hidden justify-center">
+    <div className="h-[100dvh] overflow-y-auto md:overflow-hidden flex flex-col relative">
+      {/* 主内容区 — 桌面单屏布局不允许滚动；移动端允许纵向滚动保证内容完整展开 */}
+      <div className="flex-1 flex flex-col px-4 sm:px-6 pt-10 md:pt-12 pb-6 max-w-[800px] w-full mx-auto min-h-0 justify-center">
         {/* 顶部：品牌 + 时间 + 问候 */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -177,7 +177,7 @@ export default function DashboardPage() {
           {/* 品牌与日期间的若隐若现分割线 */}
           <div className="h-px bg-gradient-to-r from-transparent via-gray-300/25 to-transparent my-3" />
           <div className="flex items-center justify-between">
-            <p className="text-base italic text-[var(--color-text-muted)] tracking-wider">
+            <p className="text-sm md:text-base italic text-[var(--color-text-muted)] tracking-wider">
               {new Date().toLocaleDateString('zh-CN', {
                 month: 'long',
                 day: 'numeric',
@@ -193,10 +193,10 @@ export default function DashboardPage() {
               </svg>
             </button>
           </div>
-          <h1 className="text-4xl font-medium tracking-[var(--tracking-wider)] text-[var(--color-text)] mt-2 mb-1">
+          <h1 className="text-3xl md:text-4xl font-medium tracking-[var(--tracking-wider)] text-[var(--color-text)] mt-2 mb-1">
             {greeting.main}
           </h1>
-          <p className="text-lg font-medium text-[var(--color-text-secondary)] mb-2 tracking-wide">
+          <p className="text-base md:text-lg font-medium text-[var(--color-text-secondary)] mb-2 tracking-wide">
             {greeting.sub}
           </p>
         </motion.div>
@@ -223,7 +223,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 卡片区域：日记图片 + 洞见推荐提问，占据剩余空间 */}
-        <div className="flex-1 min-h-0 flex flex-col gap-3 mt-3 justify-center">
+        <div className="flex-1 min-h-0 flex flex-col gap-2.5 md:gap-3 mt-2.5 md:mt-3 justify-center">
           <DiaryImageCard />
           <MirrorQuestionCard />
         </div>

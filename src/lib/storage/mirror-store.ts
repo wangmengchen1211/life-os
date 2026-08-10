@@ -1,9 +1,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert, notifyDelete } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface MirrorSession {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -11,6 +14,8 @@ export interface MirrorSession {
 
 export interface MirrorMessage {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   sessionId?: number;
   role: 'user' | 'assistant';
   content: string;
@@ -72,6 +77,7 @@ export async function createSession(title: string = '新对话'): Promise<number
   const db = await initDB();
   const now = new Date().toISOString();
   const id = await db.add('sessions', { title, createdAt: now, updatedAt: now });
+  notifyUpsert('mirror_sessions', id as number);
   return id as number;
 }
 
@@ -92,18 +98,26 @@ export async function updateSession(id: number, updates: Partial<Omit<MirrorSess
   if (!existing) return;
   const updated = { ...existing, ...updates, id };
   await db.put('sessions', updated);
+  notifyUpsert('mirror_sessions', id);
 }
 
 export async function deleteSession(id: number): Promise<void> {
   const db = await initDB();
   // 删除会话下所有消息
   const msgs = await listMessagesBySession(id);
+  const session = await db.get('sessions', id);
   const tx = db.transaction(['sessions', 'messages'], 'readwrite');
   await tx.objectStore('sessions').delete(id);
   for (const msg of msgs) {
     if (msg.id) await tx.objectStore('messages').delete(msg.id);
   }
   await tx.done;
+
+  // 同步删除云端会话与消息
+  notifyDelete('mirror_sessions', session?.cloudId);
+  for (const msg of msgs) {
+    notifyDelete('mirror_messages', msg.cloudId);
+  }
 }
 
 // ─── Message Functions ───────────────────────────────────────────────────────
@@ -122,9 +136,11 @@ export async function addMessage(msg: Omit<MirrorMessage, 'id'>): Promise<number
       }
       session.updatedAt = new Date().toISOString();
       await db.put('sessions', session);
+      notifyUpsert('mirror_sessions', session.id!);
     }
   }
 
+  notifyUpsert('mirror_messages', id as number);
   return id as number;
 }
 

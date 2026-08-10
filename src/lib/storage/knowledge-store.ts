@@ -1,9 +1,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert, notifyDelete, notifyFullSync } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface KnowledgeItem {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   type: 'link' | 'text' | 'file' | 'creation_article' | 'feishu' | 'obsidian';
   title: string;
   sourceUrl?: string;
@@ -28,6 +31,8 @@ export interface KnowledgeItem {
 
 export interface KnowledgeLink {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   itemAId: number;
   itemBId: number;
   relationType: string;
@@ -48,6 +53,8 @@ export const RELATION_TYPE_LABELS: Record<RelationType, string> = {
 
 export interface TopicCategory {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   name: string;
   subTopics: string[];
   isBuiltin: boolean;
@@ -182,6 +189,7 @@ export async function addItem(item: Omit<KnowledgeItem, 'id' | 'createdAt' | 'up
     updatedAt: item.updatedAt || now,
   };
   const id = await db.add('items', record);
+  notifyUpsert('knowledge_items', id as number);
   return id as number;
 }
 
@@ -202,6 +210,7 @@ export async function updateItem(id: number, updates: Partial<Omit<KnowledgeItem
     updatedAt: new Date().toISOString(),
   };
   await db.put('items', updated);
+  notifyUpsert('knowledge_items', id);
 }
 
 /**
@@ -251,6 +260,8 @@ export async function upsertByExternalId(
 
 export async function deleteItem(id: number): Promise<void> {
   const db = await initDB();
+  const item = await db.get('items', id);
+
   const tx = db.transaction(['items', 'links'], 'readwrite');
 
   // Delete the item
@@ -259,13 +270,21 @@ export async function deleteItem(id: number): Promise<void> {
   // Delete related links
   const linksStore = tx.objectStore('links');
   const allLinks = await linksStore.getAll();
+  const relatedLinks: KnowledgeLink[] = [];
   for (const link of allLinks) {
     if (link.itemAId === id || link.itemBId === id) {
+      relatedLinks.push(link);
       await linksStore.delete(link.id);
     }
   }
 
   await tx.done;
+
+  // 同步删除云端条目与关联链接
+  notifyDelete('knowledge_items', item?.cloudId);
+  for (const link of relatedLinks) {
+    notifyDelete('knowledge_links', link.cloudId);
+  }
 }
 
 export async function listItems(options?: ListItemsOptions): Promise<KnowledgeItem[]> {
@@ -322,12 +341,15 @@ export async function addLink(link: Omit<KnowledgeLink, 'id' | 'createdAt'> & Pa
     createdAt: link.createdAt || new Date().toISOString(),
   };
   const id = await db.add('links', record);
+  notifyUpsert('knowledge_links', id as number);
   return id as number;
 }
 
 export async function deleteLink(id: number): Promise<void> {
   const db = await initDB();
+  const existing = await db.get('links', id);
   await db.delete('links', id);
+  notifyDelete('knowledge_links', existing?.cloudId);
 }
 
 export async function listLinks(itemId?: number): Promise<KnowledgeLink[]> {
@@ -433,6 +455,7 @@ export async function addCategory(name: string): Promise<number> {
     isBuiltin: false,
     createdAt: new Date().toISOString(),
   });
+  notifyUpsert('topic_categories', id as number);
   return id as number;
 }
 
@@ -441,11 +464,14 @@ export async function updateCategory(id: number, updates: Partial<TopicCategory>
   const existing = await db.get('topic-categories', id);
   if (!existing) throw new Error(`TopicCategory ${id} not found`);
   await db.put('topic-categories', { ...existing, ...updates, id });
+  notifyUpsert('topic_categories', id);
 }
 
 export async function deleteCategory(id: number): Promise<void> {
   const db = await initDB();
+  const existing = await db.get('topic-categories', id);
   await db.delete('topic-categories', id);
+  notifyDelete('topic_categories', existing?.cloudId);
 }
 
 // ─── Tag Stats & Management ─────────────────────────────────────────────────────
@@ -494,6 +520,7 @@ export async function mergeTags(oldTags: string[], newTag: string): Promise<numb
   }
 
   await tx.done;
+  notifyFullSync('knowledge');
   return affected;
 }
 
@@ -516,6 +543,7 @@ export async function removeTag(tag: string): Promise<number> {
   }
 
   await tx.done;
+  notifyFullSync('knowledge');
   return affected;
 }
 
@@ -556,6 +584,7 @@ export async function setParent(childId: number, parentId: number): Promise<void
     aiReason: '用户手动设置层级',
     createdAt: new Date().toISOString(),
   });
+  notifyFullSync('knowledge');
 }
 
 /**
@@ -569,6 +598,7 @@ export async function removeParent(childId: number): Promise<void> {
       await db.delete('links', link.id);
     }
   }
+  notifyFullSync('knowledge');
 }
 
 /**

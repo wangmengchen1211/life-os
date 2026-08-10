@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindOS — 你的心智，自动成章</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@200;300;400;500;700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --accent-lavender: #b39ddb;
+      --accent-mint: #80cbc4;
+      --accent-warm: #ffcc80;
+      --accent-mirror: #a78bfa;
+      --color-text: #2d3748;
+      --color-text-secondary: #6b7280;
+      --color-text-muted: #9ca3af;
+      --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: #f0f0ee;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ===== 海报主体 ===== */
+    .poster {
+      width: 1200px;
+      min-height: 2300px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(160deg, #eef9f7 0%, #e8f5e9 16%, #e0f2f1 30%, #e3f2fd 48%, #f3e5f5 66%, #fce4ec 82%, #fff8e1 100%);
+    }
+
+    .poster::before {
+      content: '';
+      position: absolute;
+      top: -12%;
+      left: -8%;
+      width: 50%;
+      height: 50%;
+      background: #a8e6cf;
+      border-radius: 50%;
+      opacity: 0.10;
+      filter: blur(110px);
+      pointer-events: none;
+    }
+
+    .poster::after {
+      content: '';
+      position: absolute;
+      bottom: -18%;
+      right: -12%;
+      width: 45%;
+      height: 45%;
+      background: #b39ddb;
+      border-radius: 50%;
+      opacity: 0.07;
+      filter: blur(130px);
+      pointer-events: none;
+    }
+
+    /* ===== 品牌头部 ===== */
+    .brand-header {
+      text-align: left;
+      padding: 48px 48px 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-logo {
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+
+    .brand-logo span {
+      font-weight: 500;
+      color: var(--accent-mint);
+    }
+
+    .slogan-main {
+      font-size: 48px;
+      font-weight: 200;
+      letter-spacing: 0.14em;
+      color: var(--color-text);
+      line-height: 1.3;
+      margin-top: 14px;
+    }
+
+    .slogan-main em {
+      font-style: normal;
+      font-weight: 500;
+      background: linear-gradient(135deg, #80cbc4, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slogan-divider {
+      width: 44px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-mint), transparent);
+      margin: 18px 0;
+    }
+
+    .slogan-sub {
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--color-text-secondary);
+      line-height: 1.8;
+    }
+
+    /* ===== 主视觉区域 ===== */
+    .main-visual {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 48px 24px;
+      gap: 32px;
+    }
+
+    /* ===== 完整手机展示区 ===== */
+    .phone-wrapper {
+      position: relative;
+      z-index: 3;
+      flex-shrink: 0;
+      width: 380px;
+    }
+
+    .phone-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      height: 880px;
+      background: radial-gradient(ellipse, rgba(128, 203, 196, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .phone-frame {
+      width: 100%;
+      background: linear-gradient(145deg, #f5efe6, #ebe4d8, #e8e0d4);
+      border-radius: 48px;
+      padding: 12px;
+      box-shadow:
+        0 0 0 1px rgba(200, 190, 175, 0.30),
+        0 28px 72px rgba(0, 0, 0, 0.12),
+        0 0 80px rgba(128, 203, 196, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50);
+      position: relative;
+      z-index: 1;
+    }
+
+    .phone-screen {
+      width: 100%;
+      border-radius: 38px;
+      overflow: hidden;
+      position: relative;
+      background: #faf7f2;
+    }
+
+    .phone-screen img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+
+    /* ===== 右侧列 ===== */
+    .right-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 660px;
+      min-width: 0;
+      padding-top: 6px;
+    }
+
+    /* ===== 外置导航栏 ===== */
+    .ext-nav {
+      display: flex;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.50);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.60);
+      border-radius: 20px;
+      padding: 5px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      align-self: flex-start;
+    }
+
+    .ext-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 15px;
+      transition: all 0.25s ease;
+    }
+
+    .ext-nav-item.active {
+      background: rgba(255, 255, 255, 0.70);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .ext-nav-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ext-nav-icon.nd {
+      background: rgba(179, 157, 219, 0.14);
+      color: var(--accent-lavender);
+    }
+
+    .ext-nav-icon.nk {
+      background: rgba(128, 203, 196, 0.14);
+      color: var(--accent-mint);
+    }
+
+    .ext-nav-icon.nt {
+      background: rgba(255, 204, 128, 0.16);
+      color: #c88a30;
+    }
+
+    .ext-nav-icon.nm {
+      background: rgba(167, 139, 250, 0.14);
+      color: var(--accent-mirror);
+    }
+
+    .ext-nav-text {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.03em;
+    }
+
+    .ext-nav-item.active .ext-nav-text {
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    /* ===== 核心功能板块卡片 ===== */
+    .section-card {
+      border-radius: 20px;
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.70);
+      overflow: visible;
+      position: relative;
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.04),
+        0 12px 36px rgba(0, 0, 0, 0.08),
+        0 28px 72px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50);
+      transform: translateY(-3px);
+    }
+
+    .section-card:hover {
+      transform: translateY(-6px);
+      box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.06),
+        0 16px 48px rgba(0, 0, 0, 0.10),
+        0 32px 80px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.60);
+    }
+
+    .section-card.s-build {
+      background: rgba(128, 203, 196, 0.06);
+    }
+
+    .section-card.s-interact {
+      background: rgba(179, 157, 219, 0.06);
+    }
+
+    .section-card.s-insight {
+      background: rgba(255, 204, 128, 0.06);
+    }
+
+    /* 板块头部 */
+    .sc-header {
+      padding: 16px 20px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .sc-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .section-card.s-build .sc-icon {
+      background: rgba(128, 203, 196, 0.14);
+      color: var(--accent-mint);
+    }
+
+    .section-card.s-interact .sc-icon {
+      background: rgba(179, 157, 219, 0.14);
+      color: var(--accent-lavender);
+    }
+
+    .section-card.s-insight .sc-icon {
+      background: rgba(255, 204, 128, 0.16);
+      color: #c88a30;
+    }
+
+    .sc-title-group {
+      flex: 1;
+    }
+
+    .sc-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+    }
+
+    .sc-subtitle {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+      line-height: 1.6;
+      letter-spacing: 0.03em;
+      opacity: 1;
+    }
+
+    .sc-divider {
+      height: 1px;
+      margin: 12px 20px 0;
+      background: rgba(0, 0, 0, 0.025);
+    }
+
+    .sc-body {
+      padding: 12px 20px 14px;
+    }
+
+    /* --- 板块一 UI：知识构建 --- */
+    .build-ui {
+      display: flex;
+      gap: 10px;
+    }
+
+    .build-ui .bu-cards {
+      flex: 1.3;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .build-ui .bu-card {
+      background: rgba(255, 255, 255, 0.58);
+      border-radius: 9px;
+      padding: 7px 9px;
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 6px 16px rgba(0, 0, 0, 0.06),
+        0 12px 28px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.60);
+      border: 1px solid rgba(255, 255, 255, 0.60);
+      border-bottom-color: rgba(0, 0, 0, 0.03);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .build-ui .bu-card:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.05),
+        0 10px 24px rgba(0, 0, 0, 0.08),
+        0 18px 40px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.70);
+    }
+
+    .build-ui .bu-tags {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 3px;
+    }
+
+    .build-ui .bu-tag {
+      font-size: 7px;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      font-weight: 300;
+      background: rgba(128, 203, 196, 0.10);
+      color: #4a9e93;
+    }
+
+    .build-ui .bu-title {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 2px;
+    }
+
+    .build-ui .bu-desc {
+      font-size: 8.5px;
+      font-weight: 300;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    .build-ui .bu-graph {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .build-ui .bu-graph svg {
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.10));
+    }
+
+    /* --- 板块二 UI：互动对话 --- */
+    .interact-ui {
+      display: flex;
+      gap: 10px;
+    }
+
+    .interact-ui .iu-dialog {
+      flex: 1.3;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .interact-ui .iu-bubble {
+      padding: 6px 9px;
+      border-radius: 9px;
+      font-size: 9.5px;
+      font-weight: 300;
+      line-height: 1.4;
+      transform: translateY(-1px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.03),
+        0 4px 12px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.40);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .interact-ui .iu-bubble:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.04),
+        0 6px 18px rgba(0, 0, 0, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50);
+    }
+
+    .interact-ui .iu-bubble.mirror-q {
+      background: rgba(167, 139, 250, 0.06);
+      color: var(--color-text-muted);
+      border-bottom-left-radius: 3px;
+      margin-right: auto;
+      max-width: 85%;
+    }
+
+    .interact-ui .iu-bubble.user-a {
+      background: rgba(255, 255, 255, 0.40);
+      color: var(--color-text-secondary);
+      border-bottom-right-radius: 3px;
+      margin-left: auto;
+      max-width: 75%;
+    }
+
+    .interact-ui .iu-echo {
+      background: rgba(179, 157, 219, 0.08);
+      border-radius: 9px;
+      padding: 6px 9px;
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.03),
+        0 6px 16px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(179, 157, 219, 0.10);
+      border-bottom-color: rgba(0, 0, 0, 0.02);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .interact-ui .iu-echo-label {
+      font-size: 7.5px;
+      font-weight: 500;
+      color: var(--accent-lavender);
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+      opacity: 0.7;
+    }
+
+    .interact-ui .iu-echo-text {
+      font-size: 9px;
+      font-weight: 300;
+      color: var(--color-text-muted);
+      line-height: 1.45;
+    }
+
+    .interact-ui .iu-diary {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 9px;
+      padding: 8px;
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 7px 18px rgba(0, 0, 0, 0.06),
+        0 14px 32px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-bottom-color: rgba(0, 0, 0, 0.03);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .interact-ui .iu-diary-date {
+      font-size: 7.5px;
+      font-weight: 400;
+      color: var(--accent-lavender);
+      margin-bottom: 3px;
+      opacity: 0.7;
+    }
+
+    .interact-ui .iu-diary-text {
+      font-size: 8.5px;
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      line-height: 1.45;
+      margin-bottom: 4px;
+    }
+
+    .interact-ui .iu-diary-tags {
+      display: flex;
+      gap: 3px;
+    }
+
+    .interact-ui .iu-dt {
+      font-size: 7px;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      font-weight: 300;
+    }
+
+    .interact-ui .iu-dt.t1 {
+      background: rgba(179, 157, 219, 0.08);
+      color: #8e6cb8;
+    }
+
+    .interact-ui .iu-dt.t2 {
+      background: rgba(255, 204, 128, 0.12);
+      color: #c88a30;
+    }
+
+    /* --- 板块三 UI：洞察分析 --- */
+    .insight-ui {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .insight-ui .iu-pattern {
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border-left: 3px solid rgba(255, 204, 128, 0.55);
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 6px 16px rgba(0, 0, 0, 0.06),
+        0 12px 28px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50);
+      border-top: 1px solid rgba(255, 255, 255, 0.50);
+      border-right: 1px solid rgba(255, 255, 255, 0.50);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .insight-ui .iu-pattern-label {
+      font-size: 7.5px;
+      font-weight: 500;
+      color: #c88a30;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+      opacity: 0.75;
+      text-transform: uppercase;
+    }
+
+    .insight-ui .iu-pattern-topic {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 2px;
+    }
+
+    .insight-ui .iu-pattern-detail {
+      font-size: 8.5px;
+      font-weight: 300;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    .insight-ui .iu-stats {
+      display: flex;
+      gap: 5px;
+    }
+
+    .insight-ui .iu-stat {
+      flex: 1;
+      background: rgba(255, 204, 128, 0.10);
+      border-radius: 9px;
+      padding: 7px 6px;
+      text-align: center;
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.03),
+        0 6px 16px rgba(0, 0, 0, 0.06),
+        0 12px 28px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.40);
+      border: 1px solid rgba(255, 255, 255, 0.50);
+      border-bottom-color: rgba(0, 0, 0, 0.03);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .insight-ui .iu-stat-num {
+      font-size: 18px;
+      font-weight: 600;
+      color: #c88a30;
+      line-height: 1;
+    }
+
+    .insight-ui .iu-stat-label {
+      font-size: 7px;
+      font-weight: 300;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    /* 人生信笺 */
+    .insight-ui .iu-letter {
+      background: rgba(255, 255, 255, 0.52);
+      border-radius: 9px;
+      padding: 7px 10px;
+      position: relative;
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 6px 16px rgba(0, 0, 0, 0.06),
+        0 12px 28px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.50);
+      border-left: 3px solid rgba(200, 160, 100, 0.50);
+      border-bottom-color: rgba(0, 0, 0, 0.03);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .insight-ui .iu-letter-stamp {
+      position: absolute;
+      top: 7px;
+      right: 9px;
+      font-size: 15px;
+      opacity: 0.30;
+      transform: rotate(14deg);
+      pointer-events: none;
+    }
+
+    .insight-ui .iu-letter-label {
+      font-size: 7.5px;
+      font-weight: 500;
+      color: #b87a20;
+      letter-spacing: 0.07em;
+      margin-bottom: 2px;
+      opacity: 0.78;
+      text-transform: uppercase;
+    }
+
+    .insight-ui .iu-letter-title {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 3px;
+      letter-spacing: 0.03em;
+    }
+
+    .insight-ui .iu-letter-preview {
+      font-size: 8.5px;
+      font-weight: 300;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    .insight-ui .iu-letter-divider {
+      height: 1px;
+      background: rgba(0, 0, 0, 0.04);
+      margin: 5px 0;
+    }
+
+    /* ===== 气泡浮层 ===== */
+    .bubble-tip {
+      position: absolute;
+      z-index: 20;
+      bottom: -10px;
+      right: -10px;
+      width: 52%;
+      padding: 18px 20px 16px;
+      border-radius: 16px;
+      backdrop-filter: blur(22px);
+      border: 1.5px solid rgba(255, 255, 255, 0.80);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.10),
+        0 18px 48px rgba(0, 0, 0, 0.12),
+        0 36px 80px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.80),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+      transform: translateX(8px);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .bubble-tip::after {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 16px;
+      transform: rotate(45deg);
+      width: 14px;
+      height: 14px;
+      border-left: 1.5px solid rgba(255, 255, 255, 0.80);
+      border-bottom: 1.5px solid rgba(255, 255, 255, 0.80);
+    }
+
+    .bubble-tip:hover {
+      transform: translateX(14px);
+      box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.12),
+        0 22px 56px rgba(0, 0, 0, 0.14),
+        0 44px 96px rgba(0, 0, 0, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.90),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+    }
+
+    /* 板块一气泡：薄荷系 */
+    .bubble-tip.b-build {
+      background: linear-gradient(135deg, rgba(128, 203, 196, 0.68), rgba(200, 242, 238, 0.82));
+      color: #1a5e54;
+      border-color: rgba(128, 203, 196, 0.70);
+    }
+
+    .bubble-tip.b-build::after {
+      background: rgba(160, 222, 216, 0.70);
+      border-color: rgba(128, 203, 196, 0.70);
+    }
+
+    .bubble-tip.b-build .bubble-icon {
+      color: var(--accent-mint);
+    }
+
+    /* 板块二气泡：薰衣草紫系 */
+    .bubble-tip.b-interact {
+      background: linear-gradient(135deg, rgba(179, 157, 219, 0.65), rgba(218, 206, 240, 0.82));
+      color: #3d1f6e;
+      border-color: rgba(179, 157, 219, 0.65);
+    }
+
+    .bubble-tip.b-interact::after {
+      background: rgba(200, 186, 232, 0.72);
+      border-color: rgba(179, 157, 219, 0.65);
+    }
+
+    .bubble-tip.b-interact .bubble-icon {
+      color: var(--accent-lavender);
+    }
+
+    /* 板块三气泡：暖橙系 */
+    .bubble-tip.b-insight {
+      background: linear-gradient(135deg, rgba(255, 204, 128, 0.68), rgba(255, 230, 180, 0.84));
+      color: #6e4c08;
+      border-color: rgba(255, 204, 128, 0.65);
+    }
+
+    .bubble-tip.b-insight::after {
+      background: rgba(255, 218, 156, 0.72);
+      border-color: rgba(255, 204, 128, 0.65);
+    }
+
+    .bubble-tip.b-insight .bubble-icon {
+      color: #c88a30;
+    }
+
+    .bubble-icon {
+      font-size: 28px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bubble-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      line-height: 1.5;
+    }
+
+    .bubble-sub {
+      font-size: 11.5px;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      opacity: 0.70;
+      line-height: 1.4;
+    }
+
+    /* --- 板块关键词 --- */
+    .sc-keywords {
+      display: flex;
+      gap: 5px;
+      margin-top: 4px;
+      padding-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .sc-kw {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-weight: 300;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .section-card.s-build .sc-kw {
+      background: rgba(128, 203, 196, 0.10);
+      color: #4a9e93;
+    }
+
+    .section-card.s-interact .sc-kw {
+      background: rgba(179, 157, 219, 0.10);
+      color: #8e6cb8;
+    }
+
+    .section-card.s-insight .sc-kw {
+      background: rgba(255, 204, 128, 0.12);
+      color: #b87a20;
+    }
+
+    /* ===== 连接线装饰 ===== */
+    .connect-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .connect-lines line {
+      stroke: rgba(128, 203, 196, 0.12);
+      stroke-width: 1;
+      stroke-dasharray: 3 5;
+    }
+
+    /* ===== 关键词区域 ===== */
+    .keywords-section {
+      text-align: center;
+      padding: 24px 48px 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .keywords-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .keyword-pill {
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .keyword-pill:nth-child(1) {
+      background: rgba(128, 203, 196, 0.07);
+      color: #4db6ac;
+    }
+
+    .keyword-pill:nth-child(2) {
+      background: rgba(167, 139, 250, 0.07);
+      color: #7c5fc7;
+    }
+
+    .keyword-pill:nth-child(3) {
+      background: rgba(128, 203, 196, 0.05);
+      color: #5bb8ac;
+    }
+
+    .keyword-pill:nth-child(4) {
+      background: rgba(179, 157, 219, 0.07);
+      color: #8e6cb8;
+    }
+
+    /* ===== 扩展功能区域 ===== */
+    .extended-section {
+      padding: 8px 72px 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .extended-title {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .extended-grid {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .extended-card {
+      width: 215px;
+      padding: 14px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+      text-align: center;
+    }
+
+    .extended-icon {
+      margin-bottom: 5px;
+    }
+
+    .extended-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--color-text);
+      letter-spacing: 0.03em;
+      margin-bottom: 3px;
+    }
+
+    .extended-desc {
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      line-height: 1.55;
+      letter-spacing: 0.01em;
+    }
+
+    /* ===== 底部 ===== */
+    .poster-footer {
+      text-align: center;
+      padding: 12px 48px 44px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer-divider {
+      width: 180px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
+      margin: 0 auto 18px;
+    }
+
+    .footer-brand {
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+    }
+
+    .footer-brand span {
+      font-weight: 500;
+      color: var(--accent-mint);
+    }
+
+    .footer-links {
+      margin-top: 6px;
+      font-size: 9px;
+      color: var(--color-text-muted);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+    }
+
+    /* ===== 二维码区域 ===== */
+    .qr-section {
+      text-align: center;
+      padding: 16px 48px 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .qr-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 16px;
+      padding: 18px 28px 16px;
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.03),
+        0 6px 18px rgba(0, 0, 0, 0.05);
+    }
+
+    .qr-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .qr-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .qr-hint {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.08em;
+    }
+
+    .qr-hint em {
+      font-style: normal;
+      font-weight: 500;
+      color: var(--accent-mint);
+    }
+
+    /* ===== 装饰粒子 ===== */
+    .deco-particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .deco-particle.p1 {
+      width: 5px;
+      height: 5px;
+      background: rgba(179, 157, 219, 0.18);
+      top: 16%;
+      left: 7%;
+    }
+
+    .deco-particle.p2 {
+      width: 3px;
+      height: 3px;
+      background: rgba(128, 203, 196, 0.22);
+      top: 32%;
+      right: 5%;
+    }
+
+    .deco-particle.p3 {
+      width: 7px;
+      height: 7px;
+      background: rgba(255, 204, 128, 0.12);
+      bottom: 26%;
+      left: 4%;
+    }
+
+    .deco-particle.p4 {
+      width: 4px;
+      height: 4px;
+      background: rgba(167, 139, 250, 0.16);
+      top: 52%;
+      right: 9%;
+    }
+
+    .deco-particle.p5 {
+      width: 3px;
+      height: 3px;
+      background: rgba(128, 203, 196, 0.18);
+      top: 70%;
+      left: 10%;
+    }
+
+    .deco-particle.p6 {
+      width: 6px;
+      height: 6px;
+      background: rgba(179, 157, 219, 0.10);
+      bottom: 38%;
+      right: 7%;
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 1240px) {
+      .poster {
+        transform: scale(0.85);
+        transform-origin: top center;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .poster {
+        transform: scale(0.7);
+        transform-origin: top center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="poster">
+    <div class="deco-particle p1"></div>
+    <div class="deco-particle p2"></div>
+    <div class="deco-particle p3"></div>
+    <div class="deco-particle p4"></div>
+    <div class="deco-particle p5"></div>
+    <div class="deco-particle p6"></div>
+
+    <!-- ===== 品牌头部 ===== -->
+    <div class="brand-header">
+      <div class="brand-logo"><span>MindOS</span> &mdash; 你的心智系统</div>
+      <h1 class="slogan-main"><em>MindOS</em>&nbsp;&nbsp;&nbsp;你的心智系统</h1>
+      <div class="slogan-divider"></div>
+      <p class="slogan-sub">智能构建 · 私人专属 · 多模态分析 · 深度成长</p>
+    </div>
+
+    <!-- ===== 主视觉区域 ===== -->
+    <div class="main-visual">
+
+      <!-- 完整手机展示 -->
+      <div class="phone-wrapper">
+        <div class="phone-glow"></div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="poster-assets/dashboard.jpg" alt="MindOS 仪表盘界面">
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧列：导航 + 三大板块 -->
+      <div class="right-column">
+
+        <!-- 外置导航栏 -->
+        <div class="ext-nav">
+          <div class="ext-nav-item">
+            <div class="ext-nav-icon nd">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <span class="ext-nav-text">日记回音</span>
+          </div>
+          <div class="ext-nav-item active">
+            <div class="ext-nav-icon nk">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a9 9 0 0 0-9 9c0 3.9 2.5 7.2 6 8.5V22h6v-2.5c3.5-1.3 6-4.6 6-8.5a9 9 0 0 0-9-9Z" />
+              </svg>
+            </div>
+            <span class="ext-nav-text">思维藤蔓</span>
+          </div>
+          <div class="ext-nav-item">
+            <div class="ext-nav-icon nt">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <span class="ext-nav-text">Todo 轻约</span>
+          </div>
+          <div class="ext-nav-item">
+            <div class="ext-nav-icon nm">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4" />
+              </svg>
+            </div>
+            <span class="ext-nav-text">镜像洞见</span>
+          </div>
+        </div>
+
+        <!-- 板块一：有条理的智能构建 -->
+        <div class="section-card s-build">
+          <div class="bubble-tip b-build">
+            <span class="bubble-icon">✦</span>
+            <div class="bubble-text">随手粘贴<br>AI自动搭建</div>
+            <div class="bubble-sub">零门槛 · 即贴即建 · 智能关联</div>
+          </div>
+          <div class="sc-header">
+            <div class="sc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a9 9 0 0 0-9 9c0 3.9 2.5 7.2 6 8.5V22h6v-2.5c3.5-1.3 6-4.6 6-8.5a9 9 0 0 0-9-9Z" />
+                <path d="M9 13h6" />
+                <path d="M12 10v6" />
+              </svg>
+            </div>
+            <div class="sc-title-group">
+              <div class="sc-title">有条理的智能构建</div>
+              <div class="sc-subtitle">随手粘贴内容，AI 自动构建个人知识体系；智能打标分类，可视化思维蛛网展示概念关联</div>
+            </div>
+          </div>
+          <div class="sc-divider"></div>
+          <div class="sc-body">
+            <div class="build-ui">
+              <div class="bu-cards">
+                <div class="bu-card">
+                  <div class="bu-tags">
+                    <span class="bu-tag">心理学</span>
+                    <span class="bu-tag">认知</span>
+                  </div>
+                  <div class="bu-title">认知偏差与决策模式</div>
+                  <div class="bu-desc">识别日常思维盲区的实用框架...</div>
+                </div>
+                <div class="bu-card">
+                  <div class="bu-tags">
+                    <span class="bu-tag">创造力</span>
+                  </div>
+                  <div class="bu-title">发散性思维笔记</div>
+                  <div class="bu-desc">从约束中释放想象力的练习...</div>
+                </div>
+              </div>
+              <div class="bu-graph">
+                <svg viewBox="0 0 130 105" fill="none">
+                  <line x1="65" y1="52" x2="24" y2="20" stroke="rgba(100,180,170,0.22)" stroke-width="1" />
+                  <line x1="65" y1="52" x2="106" y2="18" stroke="rgba(100,180,170,0.22)" stroke-width="1" />
+                  <line x1="65" y1="52" x2="20" y2="85" stroke="rgba(100,180,170,0.22)" stroke-width="1" />
+                  <line x1="65" y1="52" x2="110" y2="87" stroke="rgba(100,180,170,0.22)" stroke-width="1" />
+                  <line x1="24" y1="20" x2="106" y2="18" stroke="rgba(100,180,170,0.08)" stroke-width="0.7"
+                    stroke-dasharray="2 3" />
+                  <line x1="20" y1="85" x2="110" y2="87" stroke="rgba(100,180,170,0.08)" stroke-width="0.7"
+                    stroke-dasharray="2 3" />
+                  <circle cx="65" cy="52" r="16" fill="rgba(100,180,170,0.10)" stroke="rgba(100,180,170,0.28)"
+                    stroke-width="1" />
+                  <text x="65" y="56" text-anchor="middle" font-size="7" fill="#4a9e93" font-weight="500"
+                    font-family="Noto Sans SC, sans-serif">自我</text>
+                  <circle cx="24" cy="20" r="12" fill="rgba(167,139,250,0.07)" stroke="rgba(167,139,250,0.22)"
+                    stroke-width="0.9" />
+                  <text x="24" y="24" text-anchor="middle" font-size="6.5" fill="#8b7bc8" font-weight="400"
+                    font-family="Noto Sans SC, sans-serif">成长</text>
+                  <circle cx="106" cy="18" r="12" fill="rgba(128,203,196,0.07)" stroke="rgba(128,203,196,0.22)"
+                    stroke-width="0.9" />
+                  <text x="106" y="22" text-anchor="middle" font-size="6.5" fill="#5bb8ac" font-weight="400"
+                    font-family="Noto Sans SC, sans-serif">认知</text>
+                  <circle cx="20" cy="85" r="12" fill="rgba(255,204,128,0.08)" stroke="rgba(255,204,128,0.26)"
+                    stroke-width="0.9" />
+                  <text x="20" y="89" text-anchor="middle" font-size="6.5" fill="#c88a30" font-weight="400"
+                    font-family="Noto Sans SC, sans-serif">情绪</text>
+                  <circle cx="110" cy="87" r="12" fill="rgba(179,157,219,0.07)" stroke="rgba(179,157,219,0.22)"
+                    stroke-width="0.9" />
+                  <text x="110" y="91" text-anchor="middle" font-size="6.5" fill="#8e6cb8" font-weight="400"
+                    font-family="Noto Sans SC, sans-serif">创造</text>
+                </svg>
+              </div>
+            </div>
+            <div class="sc-keywords">
+              <span class="sc-kw">智能 AI 打标分类</span>
+              <span class="sc-kw">可视化思维蛛网</span>
+              <span class="sc-kw">多格式内容导入</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 板块二：有回应的深度互动 -->
+        <div class="section-card s-interact">
+          <div class="bubble-tip b-interact">
+            <span class="bubble-icon">✦</span>
+            <div class="bubble-text">有灵魂 有思想<br>有深度的洞察</div>
+            <div class="bubble-sub">千人千面 · 灵魂共振 · 深度共情</div>
+          </div>
+          <div class="sc-header">
+            <div class="sc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="2" x2="12" y2="6" />
+                <line x1="12" y1="18" x2="12" y2="22" />
+              </svg>
+            </div>
+            <div class="sc-title-group">
+              <div class="sc-title">有回应的深度互动</div>
+              <div class="sc-subtitle">AI 引导对话，深度自我认知追踪；日记回音智能响应，长周期回顾洞察成长轨迹</div>
+            </div>
+          </div>
+          <div class="sc-divider"></div>
+          <div class="sc-body">
+            <div class="interact-ui">
+              <div class="iu-dialog">
+                <div class="iu-bubble mirror-q">你最近一次感到内心平静是什么时候？</div>
+                <div class="iu-bubble user-a">发现独处时更容易感知内心</div>
+                <div class="iu-echo">
+                  <div class="iu-echo-label">回音</div>
+                  <div class="iu-echo-text">这份觉察本身就是成长。试着记录更多这样的瞬间...</div>
+                </div>
+              </div>
+              <div class="iu-diary">
+                <div class="iu-diary-date">5月22日 · 周三</div>
+                <div class="iu-diary-text">今天和朋友重新思考了「边界感」...</div>
+                <div class="iu-diary-tags">
+                  <span class="iu-dt t1">感悟</span>
+                  <span class="iu-dt t2">✨ 平静</span>
+                </div>
+              </div>
+            </div>
+            <div class="sc-keywords">
+              <span class="sc-kw">AI 镜像对话</span>
+              <span class="sc-kw">日记回音响应</span>
+              <span class="sc-kw">长周期成长回顾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 板块三：有洞察的趋势分析 -->
+        <div class="section-card s-insight">
+          <div class="bubble-tip b-insight">
+            <span class="bubble-icon">✦</span>
+            <div class="bubble-text">平行时空的<br>成长洞察</div>
+            <div class="bubble-sub">跨周期 · 多维度 · 趋势预判</div>
+          </div>
+          <div class="sc-header">
+            <div class="sc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 1v4" />
+                <path d="M12 19v4" />
+                <path d="M4.22 4.22l2.83 2.83" />
+                <path d="M16.95 16.95l2.83 2.83" />
+                <path d="M1 12h4" />
+                <path d="M19 12h4" />
+              </svg>
+            </div>
+            <div class="sc-title-group">
+              <div class="sc-title">有洞察的趋势分析</div>
+              <div class="sc-subtitle">高频洞察报告自动捕捉行为趋势；人生信笺周期送达成长回顾；心智日志总结分析</div>
+            </div>
+          </div>
+          <div class="sc-divider"></div>
+          <div class="sc-body">
+            <div class="insight-ui">
+              <div class="iu-pattern">
+                <div class="iu-pattern-label">重复模式</div>
+                <div class="iu-pattern-topic">深夜创作力高峰</div>
+                <div class="iu-pattern-detail">过去 30 天，17 天在 22:00 后产出最多灵感 · 占比 57%</div>
+              </div>
+              <div class="iu-stats">
+                <div class="iu-stat">
+                  <div class="iu-stat-num">12</div>
+                  <div class="iu-stat-label">高频主题</div>
+                </div>
+                <div class="iu-stat">
+                  <div class="iu-stat-num">8</div>
+                  <div class="iu-stat-label">情绪周期</div>
+                </div>
+                <div class="iu-stat">
+                  <div class="iu-stat-num">5</div>
+                  <div class="iu-stat-label">关键发现</div>
+                </div>
+              </div>
+              <div class="iu-letter">
+                <div class="iu-letter-stamp">&#9993;</div>
+                <div class="iu-letter-label">人生信笺</div>
+                <div class="iu-letter-title">五月成长回顾</div>
+                <div class="iu-letter-preview">这个月你与「独处」相伴 18 天，在深夜创作中找到了新的节奏…</div>
+                <div class="iu-letter-divider"></div>
+                <div class="iu-letter-preview" style="font-size:7.5px;opacity:0.5;">下一封信笺将于 6 月 1 日送达</div>
+              </div>
+            </div>
+            <div class="sc-keywords">
+              <span class="sc-kw">高频洞察报告</span>
+              <span class="sc-kw">心智日志总结</span>
+              <span class="sc-kw">人生信笺</span>
+              <span class="sc-kw">行为模式识别</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ===== 关键词区域 ===== -->
+    <div class="keywords-section">
+      <div class="keywords-row">
+        <span class="keyword-pill">智能构建</span>
+        <span class="keyword-pill">私人专属系统</span>
+        <span class="keyword-pill">多模态分析</span>
+        <span class="keyword-pill">深度成长</span>
+      </div>
+    </div>
+
+    <!-- ===== 扩展功能区域 ===== -->
+    <div class="extended-section">
+      <div class="extended-title">更多可能</div>
+      <div class="extended-grid">
+        <div class="extended-card">
+          <div class="extended-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffcc80" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="extended-name">Todo 轻约</div>
+          <div class="extended-desc">轻松约定每个待办</div>
+        </div>
+        <div class="extended-card">
+          <div class="extended-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M8 13h8" />
+              <path d="M8 17h8" />
+            </svg>
+          </div>
+          <div class="extended-name">Obsidian 外部导入</div>
+          <div class="extended-desc">无缝接入已有知识库</div>
+        </div>
+        <div class="extended-card">
+          <div class="extended-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#80cbc4" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </div>
+          <div class="extended-name">MindLog 心智报告</div>
+          <div class="extended-desc">AI 驱动的每日心智状态分析</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 二维码区域 ===== -->
+    <div class="qr-section">
+      <div class="qr-card">
+        <div class="qr-image">
+          <img src="poster-assets/qr-code.png" alt="扫码体验 MindOS">
+        </div>
+        <div class="qr-hint">扫码即刻体验 <em>MindOS</em></div>
+      </div>
+    </div>
+
+    <!-- ===== 底部 ===== -->
+    <div class="poster-footer">
+      <div class="footer-divider"></div>
+      <div class="footer-brand"><span>MindOS</span> &mdash; 你的心智系统</div>
+      <div class="footer-links">iOS &middot; Android &middot; Web &nbsp;|&nbsp; 本地优先 &middot; 隐私即自由</div>
+    </div>
+  </div>
+
+</body>
+
+</html>

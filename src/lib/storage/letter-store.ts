@@ -3,6 +3,7 @@
  * 新功能请使用 src/lib/storage/mindlog-store.ts
  */
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert, notifyDelete } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,8 @@ export interface MonthlyStats {
 
 export interface Letter {
   id?: number; // auto-increment
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   periodMonth: string; // YYYY-MM 格式
   title: string;
   content: string;
@@ -57,6 +60,7 @@ export async function addLetter(
     createdAt: letter.createdAt || new Date().toISOString(),
   };
   const id = await db.add('letters', record);
+  notifyUpsert('letters', id as number);
   return id as number;
 }
 
@@ -88,7 +92,9 @@ export async function listLetters(): Promise<Letter[]> {
 
 export async function deleteLetter(id: number): Promise<void> {
   const db = await initDB();
+  const existing = await db.get('letters', id);
   await db.delete('letters', id);
+  notifyDelete('letters', existing?.cloudId);
 }
 
 export async function upsertLetter(
@@ -105,6 +111,7 @@ export async function upsertLetter(
       createdAt: existing.createdAt,
     };
     await db.put('letters', updated);
+    notifyUpsert('letters', existing.id as number);
     return existing.id as number;
   } else {
     return addLetter(letter);

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- 品牌主渐变：薄荷 → 薰衣草紫 -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#80cbc4"/>
+      <stop offset="50%" stop-color="#9bb8d4"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <!-- 浅色渐变用于装饰 -->
+    <linearGradient id="softGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#80cbc4" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.12"/>
+    </linearGradient>
+    <!-- 光晕 -->
+    <radialGradient id="glow" cx="50%" cy="42%" r="45%">
+      <stop offset="0%" stop-color="#80cbc4" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#b39ddb" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#fefef9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="108" fill="#fefef9"/>
+
+  <!-- 微光晕 -->
+  <rect width="512" height="512" rx="108" fill="url(#glow)"/>
+
+  <!-- 装饰：思维节点网络（极简） -->
+  <g opacity="0.18" stroke="url(#brandGrad)" stroke-width="1" fill="none">
+    <line x1="90" y1="160" x2="150" y2="130"/>
+    <line x1="150" y1="130" x2="200" y2="155"/>
+    <line x1="150" y1="130" x2="170" y2="100"/>
+    <circle cx="90" cy="160" r="4" fill="#80cbc4" opacity="0.5"/>
+    <circle cx="150" cy="130" r="5" fill="#80cbc4" opacity="0.6"/>
+    <circle cx="200" cy="155" r="3.5" fill="#9bb8d4" opacity="0.4"/>
+    <circle cx="170" cy="100" r="3" fill="#a78bfa" opacity="0.5"/>
+
+    <line x1="360" y1="120" x2="410" y2="150"/>
+    <line x1="410" y1="150" x2="430" y2="120"/>
+    <line x1="410" y1="150" x2="440" y2="170"/>
+    <circle cx="360" cy="120" r="3.5" fill="#a78bfa" opacity="0.5"/>
+    <circle cx="410" cy="150" r="4" fill="#b39ddb" opacity="0.5"/>
+    <circle cx="430" cy="120" r="3" fill="#a78bfa" opacity="0.4"/>
+    <circle cx="440" cy="170" r="3.5" fill="#9bb8d4" opacity="0.4"/>
+  </g>
+
+  <!-- 主文字 MindOS -->
+  <text x="256" y="290" text-anchor="middle" font-family="'Noto Sans SC', 'PingFang SC', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif" font-size="118" font-weight="300" letter-spacing="0.06em" fill="url(#brandGrad)">MindOS</text>
+
+  <!-- 副文字 -->
+  <text x="256" y="342" text-anchor="middle" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif" font-size="20" font-weight="300" letter-spacing="0.32em" fill="#9ca3af">你的心智系统</text>
+
+  <!-- 底部装饰线 -->
+  <line x1="196" y1="368" x2="316" y2="368" stroke="url(#brandGrad)" stroke-width="1" opacity="0.25" stroke-linecap="round"/>
+
+  <!-- 底部小点装饰 -->
+  <circle cx="196" cy="368" r="2" fill="#80cbc4" opacity="0.35"/>
+  <circle cx="316" cy="368" r="2" fill="#a78bfa" opacity="0.35"/>
+</svg>

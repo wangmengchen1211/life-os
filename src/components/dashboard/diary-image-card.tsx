@@ -94,7 +94,7 @@ export function DiaryImageCard() {
   // 空态 / 加载态
   if (loading) {
     return (
-      <div className="w-full h-[112px] rounded-2xl bg-white/30 backdrop-blur-sm border border-black/5 flex items-center justify-center">
+      <div className="w-full h-[96px] md:h-[112px] rounded-2xl bg-white/30 backdrop-blur-sm border border-black/5 flex items-center justify-center">
         <motion.div
           animate={{ opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -118,7 +118,7 @@ export function DiaryImageCard() {
   return (
     <div
       className="w-full rounded-2xl overflow-hidden flex cursor-pointer hover:brightness-[1.02] transition-all group"
-      style={{ height: '112px' }}
+      style={{ height: 'clamp(88px, 14dvh, 112px)' }}
       onClick={handleClick}
     >
       {/* 左侧：图片缩略图 */}
@@ -129,7 +129,7 @@ export function DiaryImageCard() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-[112px] h-full flex-shrink-0"
+          className="w-[clamp(88px,14dvh,112px)] h-full flex-shrink-0"
         >
           <img
             src={current.imageBase64}

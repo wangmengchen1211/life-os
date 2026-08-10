@@ -13,6 +13,7 @@ import {
   type MirrorSession,
 } from '@/lib/storage/mirror-store';
 import { buildUserProfilePrompt } from '@/lib/ai/prompts/mirror-insight';
+import { RichText } from '@/components/shared/rich-text';
 
 // ─── Quick Prompts ───────────────────────────────────────────────────────────
 
@@ -43,6 +44,8 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
   const [fileAttachment, setFileAttachment] = useState<{ name: string; content: string } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+  // 同步发送锁：防止快速连点/双击导致重复发送（state 更新是异步的，isStreaming 无法即时拦截）
+  const sendingRef = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -114,6 +117,9 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
     const text = overrideInput ?? input;
     if (!text.trim() && !imageAttachment) return;
     if (isStreaming) return;
+    // 同步锁：即使 isStreaming 尚未更新（React state 异步），也能拦截第二次点击
+    if (sendingRef.current) return;
+    sendingRef.current = true;
 
     // 如果没有 sessionId，自动创建新会话
     let sid = sessionId;
@@ -260,6 +266,7 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
       setIsStreaming(false);
       setStreamText('');
       abortRef.current = null;
+      sendingRef.current = false;
     }
   }, [input, imageAttachment, fileAttachment, isStreaming, messages, userProfile, sessionId, onSessionCreated]);
 
@@ -370,9 +377,13 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
                       ))}
                     </div>
                   )}
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {msg.content}
-                  </p>
+                  {msg.role === 'user' ? (
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      {msg.content}
+                    </p>
+                  ) : (
+                    <RichText content={msg.content} />
+                  )}
                 </div>
               </div>
             ))}
@@ -380,19 +391,17 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
             {/* Streaming message */}
             {isStreaming && streamText && (
               <div className="flex justify-start">
-                <div className="bg-white/80 rounded-xl rounded-tl-sm p-3 max-w-[80%]">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {streamText}
-                    <span className="inline-block w-1 h-3.5 bg-purple-400 ml-0.5 animate-pulse" />
-                  </p>
+                <div className="bg-white/80 rounded-xl rounded-tl-sm p-3 max-w-[85%]">
+                  <RichText content={streamText} />
+                  <span className="inline-block w-1 h-3.5 bg-purple-400 ml-0.5 animate-pulse rounded-full" />
                 </div>
               </div>
             )}
 
-            {/* Streaming but no text yet */}
+            {/* Streaming but no text yet（思考中） */}
             {isStreaming && !streamText && (
               <div className="flex justify-start">
-                <div className="bg-white/80 rounded-xl rounded-tl-sm p-3">
+                <div className="bg-white/80 rounded-xl rounded-tl-sm p-3 flex items-center gap-2">
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
                       <div
@@ -402,6 +411,7 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
                       />
                     ))}
                   </div>
+                  <span className="text-xs text-gray-400">思考中...</span>
                 </div>
               </div>
             )}

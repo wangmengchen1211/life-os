@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>心屿 · 像素花 bloom</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+KuaiLe&family=Courier+Prime&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #0f1215;
+      overflow: hidden;
+      font-family: 'Noto Sans SC', sans-serif;
+      color: #FAFAF8;
+      user-select: none;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #gameCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: #0f1215;
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #0f1215;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-pixel {
+      width: 48px;
+      height: 48px;
+      background: #A8D5BA;
+      animation: pixelPulse 1.2s ease-in-out infinite;
+      box-shadow: 0 0 24px rgba(168, 213, 186, 0.35);
+      border-radius: 4px;
+    }
+
+    @keyframes pixelPulse {
+
+      0%,
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.85;
+      }
+
+      50% {
+        transform: scale(1.15) rotate(2deg);
+        opacity: 1;
+      }
+    }
+
+    .loading-text {
+      margin-top: 24px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 13px;
+      color: #4A4E69;
+      letter-spacing: 0.25em;
+    }
+
+    .loading-sub {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #3A506B;
+      font-family: 'Courier Prime', monospace;
+      max-width: 80vw;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .loading-error {
+      margin-top: 16px;
+      padding: 10px 16px;
+      background: rgba(232, 168, 124, 0.12);
+      border: 1px solid rgba(232, 168, 124, 0.3);
+      border-radius: 8px;
+      font-size: 11px;
+      color: #E8A87C;
+      font-family: 'Courier Prime', monospace;
+      max-width: 80vw;
+      word-break: break-all;
+      display: none;
+    }
+
+    .loading-error.show {
+      display: block;
+    }
+
+    .loading-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      display: none;
+    }
+
+    .loading-actions.show {
+      display: flex;
+    }
+
+    .ld-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(168, 213, 186, 0.3);
+      background: rgba(168, 213, 186, 0.08);
+      color: #A8D5BA;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.25s;
+    }
+
+    .ld-btn:hover {
+      background: rgba(168, 213, 186, 0.18);
+    }
+
+    .status-bar {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      height: 44px;
+      background: rgba(15, 18, 21, 0.55);
+      backdrop-filter: blur(16px) saturate(1.2);
+      -webkit-backdrop-filter: blur(16px) saturate(1.2);
+      border: 1px solid rgba(168, 213, 186, 0.12);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      z-index: 10;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #A8D5BA;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .pixel-icon {
+      font-size: 16px;
+      filter: drop-shadow(0 0 6px rgba(168, 213, 186, 0.45));
+      display: inline-block;
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-2px);
+      }
+    }
+
+    .status-right {
+      display: flex;
+      gap: 10px;
+    }
+
+    .status-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      color: #8BB8D8;
+      font-size: 14px;
+    }
+
+    .status-btn:hover {
+      background: rgba(168, 213, 186, 0.12);
+      border-color: rgba(168, 213, 186, 0.25);
+      transform: translateY(-1px);
+      color: #A8D5BA;
+    }
+
+    .title-area {
+      position: fixed;
+      top: 76px;
+      left: 22px;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .title-main {
+      font-family: 'ZCOOL KuaiLe', cursive;
+      font-size: 26px;
+      color: #FAFAF8;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(168, 213, 186, 0.08);
+      letter-spacing: 0.08em;
+      line-height: 1.2;
+    }
+
+    .title-sub {
+      font-size: 11px;
+      color: #4A4E69;
+      margin-top: 4px;
+      font-family: 'Courier Prime', monospace;
+      letter-spacing: 0.08em;
+    }
+
+    .info-panel {
+      position: fixed;
+      top: 76px;
+      right: 20px;
+      width: 260px;
+      background: rgba(15, 18, 21, 0.7);
+      backdrop-filter: blur(20px) saturate(1.3);
+      -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      border: 1px solid rgba(168, 213, 186, 0.15);
+      border-radius: 16px;
+      padding: 18px;
+      z-index: 10;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      transform: translateX(0);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    }
+
+    .info-panel.collapsed {
+      transform: translateX(calc(100% + 30px));
+      opacity: 0.6;
+    }
+
+    .info-panel h3 {
+      font-size: 15px;
+      color: #A8D5BA;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .info-panel .content {
+      font-size: 12.5px;
+      line-height: 1.85;
+      color: rgba(250, 250, 248, 0.82);
+    }
+
+    .info-panel .hint {
+      margin-top: 10px;
+      font-size: 10.5px;
+      color: #4A4E69;
+      font-family: 'Courier Prime', monospace;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      letter-spacing: 0.04em;
+    }
+
+    .dialogue-bubble {
+      position: fixed;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      max-width: 560px;
+      min-width: 280px;
+      background: rgba(15, 18, 21, 0.92);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(168, 213, 186, 0.2);
+      border-radius: 18px;
+      padding: 18px 22px;
+      z-index: 20;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(168, 213, 186, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .dialogue-bubble.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .dialogue-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 14px;
+      height: 14px;
+      background: rgba(15, 18, 21, 0.92);
+      border-right: 1px solid rgba(168, 213, 186, 0.2);
+      border-bottom: 1px solid rgba(168, 213, 186, 0.2);
+    }
+
+    .dialogue-speaker {
+      font-size: 12px;
+      color: #A8D5BA;
+      margin-bottom: 6px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.03em;
+    }
+
+    .dialogue-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #FAFAF8;
+      min-height: 1.7em;
+    }
+
+    .dialogue-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: #A8D5BA;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: cursorBlink 1s step-end infinite;
+    }
+
+    @keyframes cursorBlink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      background: rgba(15, 18, 21, 0.75);
+      backdrop-filter: blur(20px) saturate(1.2);
+      -webkit-backdrop-filter: blur(20px) saturate(1.2);
+      border: 1px solid rgba(168, 213, 186, 0.12);
+      border-radius: 20px;
+      padding: 6px;
+      z-index: 10;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 7px 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background: rgba(168, 213, 186, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .nav-item.active {
+      background: rgba(168, 213, 186, 0.14);
+      border-color: rgba(168, 213, 186, 0.3);
+      box-shadow: 0 0 20px rgba(168, 213, 186, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-item.active .nav-icon {
+      filter: drop-shadow(0 0 8px rgba(168, 213, 186, 0.6));
+      transform: scale(1.1);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      transition: all 0.3s ease;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      color: rgba(250, 250, 248, 0.55);
+      font-weight: 500;
+      transition: color 0.3s;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-item.active .nav-label {
+      color: #A8D5BA;
+    }
+
+    .nav-indicator {
+      position: absolute;
+      bottom: 4px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #A8D5BA;
+      opacity: 0;
+      transition: opacity 0.3s;
+      box-shadow: 0 0 6px #A8D5BA;
+    }
+
+    .nav-item.active .nav-indicator {
+      opacity: 1;
+    }
+
+    .fab-container {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .fab {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(15, 18, 21, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(168, 213, 186, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: #FAFAF8;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .fab:hover {
+      transform: scale(1.12) translateY(-2px);
+      border-color: rgba(168, 213, 186, 0.4);
+      box-shadow: 0 0 24px rgba(168, 213, 186, 0.18);
+      background: rgba(168, 213, 186, 0.1);
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    .corner-deco {
+      position: fixed;
+      width: 120px;
+      height: 120px;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .corner-deco.tl {
+      top: 0;
+      left: 0;
+      border-top: 2px solid rgba(168, 213, 186, 0.1);
+      border-left: 2px solid rgba(168, 213, 186, 0.1);
+    }
+
+    .corner-deco.br {
+      bottom: 0;
+      right: 0;
+      border-bottom: 2px solid rgba(168, 213, 186, 0.1);
+      border-right: 2px solid rgba(168, 213, 186, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-pixel"></div>
+    <div class="loading-text">MIND TOWN INITIALIZING</div>
+    <div class="loading-sub" id="loadingSub">构建等距世界引擎...</div>
+    <div class="loading-error" id="loadingError"></div>
+    <div class="loading-actions" id="loadingActions">
+      <button class="ld-btn" onclick="forceStart()">强制启动</button>
+      <button class="ld-btn" onclick="location.reload()">刷新重试</button>
+    </div>
+  </div>
+
+  <div class="corner-deco tl"></div>
+  <div class="corner-deco br"></div>
+
+  <div class="status-bar">
+    <div class="status-left">
+      <span class="pixel-icon" id="weatherIcon">&#9728;</span>
+      <span id="timeText">午后 · 晴</span>
+    </div>
+    <div class="status-right">
+      <div class="status-btn" id="notifBtn" title="通知">&#128276;</div>
+      <div class="status-btn" id="settingsBtn" title="设置">&#9881;</div>
+      <div class="status-btn" id="panelToggleBtn" title="面板">&#8505;</div>
+    </div>
+  </div>
+
+  <div class="title-area">
+    <div class="title-main">心屿 · 像素花 bloom</div>
+    <div class="title-sub">v2.1 — Isometric · Canvas2D · Bloom</div>
+  </div>
+
+  <div class="info-panel" id="infoPanel">
+    <h3>&#9656; &#127807; 欢迎来到心屿</h3>
+    <div class="content">
+      2.5D 等距像素小镇，五座心灵建筑已落成。<br><br>
+      &#9656; 拖拽移动视角<br>
+      &#9656; 点击建筑查看详情<br>
+      &#9656; 点击镜我对话<br>
+      &#9656; 空格键切换日夜
+    </div>
+    <div class="hint">Isometric · 16-color palette · Y-sort</div>
+  </div>
+
+  <div class="dialogue-bubble" id="dialogueBubble">
+    <div class="dialogue-speaker" id="dialogueSpeaker">&#129694; 镜我</div>
+    <div class="dialogue-text" id="dialogueText"><span class="dialogue-cursor"></span></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" data-loc="town" data-bid="">
+      <div class="nav-icon">&#127968;</div>
+      <div class="nav-label">小镇</div>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item" data-loc="diary" data-bid="library">
+      <div class="nav-icon">&#128214;</div>
+      <div class="nav-label">日记</div>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item" data-loc="knowledge" data-bid="greenhouse">
+      <div class="nav-icon">&#128161;</div>
+      <div class="nav-label">知识</div>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item" data-loc="mirror" data-bid="mirror-house">
+      <div class="nav-icon">&#129694;</div>
+      <div class="nav-label">镜我</div>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item" data-loc="profile" data-bid="theater">
+      <div class="nav-icon">&#128100;</div>
+      <div class="nav-label">我的</div>
+      <div class="nav-indicator"></div>
+    </div>
+  </div>
+
+  <div class="fab-container">
+    <div class="fab" id="fabMap" title="地图">&#128506;</div>
+    <div class="fab" id="fabChat" title="对话">&#128172;</div>
+  </div>
+
+  <script>
+    // ===== 1. 核心配置 =====
+    var PALETTE = {
+      MINT: '#A8D5BA', FOG: '#B4C7E7', APRICOT: '#F5E6D3',
+      ORANGE: '#E8A87C', GRAY_PINK: '#D4B5B0', MOSS: '#C8D5B9',
+      INDIGO: '#3A506B', TEA: '#8B6F47', PAPER: '#FAFAF8',
+      INK: '#6B6B6B', BLACK: '#1A1A1A', WATER: '#8BB8D8',
+      STONE: '#C5C9D4', SHADOW: '#4A4E69', HIGHLIGHT: '#FFFDF7',
+      DARK_GREEN: '#8FA87A'
+    };
+
+    function darken(hex, s) {
+      s = s || 1;
+      var c = parseInt(hex.slice(1), 16);
+      var r = Math.max(0, ((c >> 16) & 255) - s * 32);
+      var g = Math.max(0, ((c >> 8) & 255) - s * 32);
+      var b = Math.max(0, (c & 255) - s * 32);
+      return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    }
+
+    function lighten(hex, s) {
+      s = s || 1;
+      var c = parseInt(hex.slice(1), 16);
+      var r = Math.min(255, ((c >> 16) & 255) + s * 32);
+      var g = Math.min(255, ((c >> 8) & 255) + s * 32);
+      var b = Math.min(255, (c & 255) + s * 32);
+      return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    }
+
+    var TOWN_CONFIG = {
+      tileSize: 32,
+      isoTileW: 64,
+      isoTileH: 32,
+      mapWidth: 19,
+      mapHeight: 15,
+      buildings: [
+        { id: 'mirror-house', name: '镜屋', nameEn: 'Mirror House', grid: { x: 7, y: 7 }, size: { w: 3, h: 3 }, colors: { roof: PALETTE.FOG, wall: lighten(PALETTE.FOG, 1) }, icon: '\u{1FA9E}', desc: '圆顶像素小屋，与镜我深度交流的地方。' },
+        { id: 'library', name: '藏书阁', nameEn: 'Library', grid: { x: 1, y: 4 }, size: { w: 3, h: 3 }, colors: { roof: PALETTE.TEA, wall: PALETTE.APRICOT }, icon: '\u{1F4DA}', desc: '三层像素塔楼，知识的殿堂。' },
+        { id: 'greenhouse', name: '温室', nameEn: 'Greenhouse', grid: { x: 14, y: 4 }, size: { w: 3, h: 2 }, colors: { roof: PALETTE.MOSS, wall: lighten(PALETTE.MOSS, 1) }, icon: '\u{1F33F}', desc: '像素玻璃花房，习惯在这里生长。' },
+        { id: 'spring', name: '记忆之泉', nameEn: 'Spring of Memory', grid: { x: 13, y: 9 }, size: { w: 3, h: 3 }, colors: { roof: PALETTE.WATER, wall: lighten(PALETTE.WATER, 1) }, icon: '\u26F2', desc: '像素瀑布汇入池塘，日记化作彩色落叶。' },
+        { id: 'theater', name: '剧场', nameEn: 'Theater', grid: { x: 1, y: 9 }, size: { w: 4, h: 3 }, colors: { roof: PALETTE.GRAY_PINK, wall: lighten(PALETTE.GRAY_PINK, 1) }, icon: '\u{1F3AD}', desc: '半圆像素舞台，模拟对话与复盘。' },
+        { id: 'square', name: '中央广场', nameEn: 'Town Square', grid: { x: 6, y: 4 }, size: { w: 4, h: 3 }, isSquare: true, colors: { base: '#DDD5C8' }, icon: '\u26F2', desc: '小镇枢纽，像素喷泉日夜不息。' }
+      ]
+    };
+
+    function isoToScreen(mx, my) {
+      return {
+        x: (mx - my) * TOWN_CONFIG.isoTileW / 2,
+        y: (mx + my) * TOWN_CONFIG.isoTileH / 2
+      };
+    }
+
+    function isoToMap(sx, sy) {
+      return {
+        x: (sx / (TOWN_CONFIG.isoTileW / 2) + sy / (TOWN_CONFIG.isoTileH / 2)) / 2,
+        y: (sy / (TOWN_CONFIG.isoTileH / 2) - sx / (TOWN_CONFIG.isoTileW / 2)) / 2
+      };
+    }
+
+    // ===== 2. 加载状态 =====
+    function setLoadingSub(text) {
+      document.getElementById('loadingSub').textContent = text;
+    }
+
+    function setLoadingError(msg) {
+      document.getElementById('loadingError').textContent = msg;
+      document.getElementById('loadingError').classList.add('show');
+      document.getElementById('loadingActions').classList.add('show');
+      document.getElementById('loadingSub').textContent = '初始化失败';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingScreen').classList.add('hidden');
+    }
+
+    function forceStart() {
+      hideLoading();
+      showDialogue('\u{1FA9E} 镜我', '强制启动模式。');
+    }
+
+    // ===== 3. 打字机 =====
+    function Typewriter(el, opts) {
+      opts = opts || {};
+      this.el = el;
+      this.speed = opts.speed || 32;
+      this.onDone = opts.onDone || function () { };
+      this.t = null;
+      this.running = false;
+    }
+
+    Typewriter.prototype.type = function (text) {
+      this.stop();
+      this.el.innerHTML = '<span class="dialogue-cursor"></span>';
+      this.running = true;
+      var i = 0;
+      var chars = text.split('');
+      var cursor = '<span class="dialogue-cursor"></span>';
+      var self = this;
+
+      function tick() {
+        if (i >= chars.length) {
+          self.el.innerHTML = text.replace(/\n/g, '<br>');
+          self.running = false;
+          self.onDone();
+          return;
+        }
+        var ch = chars[i];
+        var isPause = '\uFF0C\u3002\uFF01\uFF1F\n'.indexOf(ch) >= 0;
+        self.el.innerHTML = chars.slice(0, i + 1).join('').replace(/\n/g, '<br>') + cursor;
+        i++;
+        if (isPause && i < chars.length) {
+          clearInterval(self.t);
+          self.t = setTimeout(function () {
+            self.t = setInterval(tick, self.speed);
+          }, self.speed * 3);
+        }
+      }
+
+      this.t = setInterval(tick, this.speed);
+    };
+
+    Typewriter.prototype.stop = function () {
+      if (this.t) {
+        clearInterval(this.t);
+        clearTimeout(this.t);
+        this.t = null;
+      }
+      this.running = false;
+    };
+
+    // ===== 4. Canvas 等距引擎 =====
+    function IsometricEngine(canvasId) {
+      this.canvas = document.getElementById(canvasId);
+      if (!this.canvas) throw new Error('找不到 canvas');
+
+      this.resize();
+      this.ctx = this.canvas.getContext('2d');
+      this.ctx.imageSmoothingEnabled = false;
+
+      this.cam = { x: 0, y: 0, tx: 0, ty: 0 };
+      this.isNight = false;
+      this.nightAlpha = 0;
+      this.tick = 0;
+
+      this.npc = { mx: 8, my: 6, tx: 8, ty: 6, moving: false };
+
+      this.particles = [];
+      for (var i = 0; i < 25; i++) {
+        this.particles.push({
+          x: Math.random() * 1200,
+          y: Math.random() * 600,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.4,
+          life: Math.random() * 200,
+          size: 2 + Math.random() * 2
+        });
+      }
+
+      this.trees = [
+        { x: 3, y: 2, h: 35, crown: 12 },
+        { x: 5, y: 1, h: 40, crown: 14 },
+        { x: 11, y: 2, h: 30, crown: 10 },
+        { x: 16, y: 3, h: 38, crown: 13 },
+        { x: 18, y: 6, h: 32, crown: 11 },
+        { x: 2, y: 7, h: 36, crown: 12 },
+        { x: 18, y: 8, h: 34, crown: 11 },
+        { x: 4, y: 11, h: 38, crown: 13 },
+        { x: 10, y: 12, h: 30, crown: 10 },
+        { x: 17, y: 13, h: 35, crown: 12 }
+      ];
+
+      this.flowers = [];
+      for (var i = 0; i < 30; i++) {
+        this.flowers.push({
+          gx: (2 + Math.random() * 15) | 0,
+          gy: (2 + Math.random() * 11) | 0,
+          color: [PALETTE.GRAY_PINK, PALETTE.ORANGE, PALETTE.MINT, '#D0B8E0'][(Math.random() * 4) | 0],
+          size: (2 + Math.random() * 2) | 0
+        });
+      }
+
+      this.centerCamera();
+      this.bindEvents();
+      this.loop();
+    }
+
+    IsometricEngine.prototype.resize = function () {
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+      this.canvas.style.width = '100%';
+      this.canvas.style.height = '100%';
+    };
+
+    IsometricEngine.prototype.centerCamera = function () {
+      var cp = isoToScreen(9, 7);
+      this.cam.tx = -cp.x + this.canvas.width / 2;
+      this.cam.ty = -cp.y + this.canvas.height / 2 - 40;
+      this.cam.x = this.cam.tx;
+      this.cam.y = this.cam.ty;
+    };
+
+    IsometricEngine.prototype.focusOnBuilding = function (bid) {
+      var b = null;
+      for (var i = 0; i < TOWN_CONFIG.buildings.length; i++) {
+        if (TOWN_CONFIG.buildings[i].id === bid) {
+          b = TOWN_CONFIG.buildings[i];
+          break;
+        }
+      }
+      if (!b) return;
+      var cp = isoToScreen(b.grid.x + b.size.w / 2, b.grid.y + b.size.h / 2);
+      this.cam.tx = -cp.x + this.canvas.width / 2;
+      this.cam.ty = -cp.y + this.canvas.height / 2 - 40;
+    };
+
+    IsometricEngine.prototype.drawIsoTile = function (mx, my, color) {
+      var p = isoToScreen(mx, my);
+      var x = p.x + this.cam.x;
+      var y = p.y + this.cam.y;
+      var tw = TOWN_CONFIG.isoTileW / 2;
+      var th = TOWN_CONFIG.isoTileH / 2;
+
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, y - th);
+      this.ctx.lineTo(x + tw, y);
+      this.ctx.lineTo(x, y + th);
+      this.ctx.lineTo(x - tw, y);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.strokeStyle = lighten(color, 2);
+      this.ctx.globalAlpha = 0.25;
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, y - th);
+      this.ctx.lineTo(x + tw, y);
+      this.ctx.stroke();
+
+      this.ctx.strokeStyle = darken(color, 1);
+      this.ctx.beginPath();
+      this.ctx.moveTo(x + tw, y);
+      this.ctx.lineTo(x, y + th);
+      this.ctx.lineTo(x - tw, y);
+      this.ctx.stroke();
+      this.ctx.globalAlpha = 1;
+    };
+
+    IsometricEngine.prototype.drawBuilding = function (b) {
+      var p1 = isoToScreen(b.grid.x, b.grid.y);
+      var p2 = isoToScreen(b.grid.x + b.size.w, b.grid.y);
+      var p3 = isoToScreen(b.grid.x + b.size.w, b.grid.y + b.size.h);
+      var p4 = isoToScreen(b.grid.x, b.grid.y + b.size.h);
+
+      var cx1 = p1.x + this.cam.x, cy1 = p1.y + this.cam.y;
+      var cx2 = p2.x + this.cam.x, cy2 = p2.y + this.cam.y;
+      var cx3 = p3.x + this.cam.x, cy3 = p3.y + this.cam.y;
+      var cx4 = p4.x + this.cam.x, cy4 = p4.y + this.cam.y;
+
+      if (b.isSquare) {
+        this.ctx.fillStyle = b.colors.base || '#DDD5C8';
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx1, cy1);
+        this.ctx.lineTo(cx2, cy2);
+        this.ctx.lineTo(cx3, cy3);
+        this.ctx.lineTo(cx4, cy4);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        var cx = (cx1 + cx3) / 2;
+        var cy = (cy1 + cy3) / 2;
+        this.ctx.fillStyle = PALETTE.STONE;
+        this.ctx.fillRect(cx - 8, cy - 8, 16, 16);
+
+        return {
+          sortY: (b.grid.y + b.size.h) * TOWN_CONFIG.isoTileH,
+          bounds: {
+            x: Math.min(cx1, cx2, cx3, cx4) - 10,
+            y: Math.min(cy1, cy2, cy3, cy4) - 10,
+            w: Math.abs(cx2 - cx4) + 20,
+            h: Math.abs(cy3 - cy1) + 20
+          }
+        };
+      }
+
+      var bh = 50;
+      var roof = lighten(b.colors.roof, 1);
+      var wall = b.colors.wall;
+      var wallDark = darken(b.colors.wall, 1);
+
+      // 右面
+      this.ctx.fillStyle = wallDark;
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx3, cy3);
+      this.ctx.lineTo(cx4, cy4);
+      this.ctx.lineTo(cx4, cy4 - bh);
+      this.ctx.lineTo(cx3, cy3 - bh);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // 左面
+      this.ctx.fillStyle = wall;
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx4, cy4);
+      this.ctx.lineTo(cx1, cy1);
+      this.ctx.lineTo(cx1, cy1 - bh);
+      this.ctx.lineTo(cx4, cy4 - bh);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // 顶面
+      this.ctx.fillStyle = roof;
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx1, cy1 - bh);
+      this.ctx.lineTo(cx2, cy2 - bh);
+      this.ctx.lineTo(cx3, cy3 - bh);
+      this.ctx.lineTo(cx4, cy4 - bh);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // 纹理线
+      this.ctx.strokeStyle = darken(b.colors.roof, 1);
+      this.ctx.globalAlpha = 0.3;
+      this.ctx.lineWidth = 1;
+      for (var i = 1; i < 4; i++) {
+        var t = i / 4;
+        var lx = cx4 + (cx1 - cx4) * t;
+        var ly = cy4 - bh + (cy1 - cy4) * t;
+        var rx = cx3 + (cx2 - cx3) * t;
+        var ry = cy3 - bh + (cy2 - cy3) * t;
+        this.ctx.beginPath();
+        this.ctx.moveTo(lx, ly);
+        this.ctx.lineTo(rx, ry);
+        this.ctx.stroke();
+      }
+      this.ctx.globalAlpha = 1;
+
+      // 门
+      this.ctx.fillStyle = PALETTE.TEA;
+      this.ctx.fillRect(cx4 - 6, cy4 - 18, 12, 18);
+      this.ctx.fillStyle = lighten(PALETTE.TEA, 1);
+      this.ctx.fillRect(cx4 - 5, cy4 - 17, 10, 16);
+
+      // 窗户
+      this.ctx.fillStyle = PALETTE.WATER;
+      this.ctx.fillRect(cx4 - 12, cy4 - bh + 8, 8, 8);
+      this.ctx.fillRect(cx4 + 4, cy4 - bh + 8, 8, 8);
+
+      // 标签
+      var cx = (cx1 + cx3) / 2;
+      var cy = (cy1 + cy3) / 2;
+      this.ctx.fillStyle = PALETTE.INDIGO;
+      this.ctx.font = '11px "Noto Sans SC", sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(b.icon + ' ' + b.name, cx, cy + 24);
+
+      return {
+        sortY: (b.grid.y + b.size.h) * TOWN_CONFIG.isoTileH,
+        bounds: {
+          x: Math.min(cx1, cx2, cx3, cx4) - 10,
+          y: Math.min(cy1, cy2, cy3, cy4) - 60,
+          w: Math.abs(cx2 - cx4) + 20,
+          h: Math.abs(cy3 - cy1) + 80
+        }
+      };
+    };
+
+    IsometricEngine.prototype.drawTree = function (t) {
+      var p = isoToScreen(t.x, t.y);
+      var x = p.x + this.cam.x;
+      var y = p.y + this.cam.y;
+
+      this.ctx.fillStyle = PALETTE.TEA;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x - 4, y);
+      this.ctx.lineTo(x + 4, y);
+      this.ctx.lineTo(x + 4, y - 24);
+      this.ctx.lineTo(x - 4, y - 24);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      var crownColors = [PALETTE.MOSS, darken(PALETTE.MOSS, 1), lighten(PALETTE.MOSS, 1)];
+      for (var idx = 0; idx < crownColors.length; idx++) {
+        var cy = y - 28 - idx * 8;
+        var cr = 14 - idx * 3;
+        this.ctx.fillStyle = crownColors[idx];
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, cy - cr);
+        this.ctx.lineTo(x + cr, cy);
+        this.ctx.lineTo(x, cy + cr);
+        this.ctx.lineTo(x - cr, cy);
+        this.ctx.closePath();
+        this.ctx.fill();
+      }
+
+      return { sortY: t.y * TOWN_CONFIG.isoTileH + 10 };
+    };
+
+    IsometricEngine.prototype.drawNPC = function () {
+      var p = isoToScreen(this.npc.mx, this.npc.my);
+      var x = p.x + this.cam.x;
+      var y = p.y + this.cam.y - 18;
+
+      this.ctx.fillStyle = 'rgba(26,26,26,0.15)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(x, y + 10, 10, 4, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.fillStyle = PALETTE.PAPER;
+      this.ctx.fillRect(x - 5, y - 22, 10, 9);
+      this.ctx.fillStyle = '#E8E0E0';
+      this.ctx.fillRect(x - 4, y - 21, 8, 7);
+
+      this.ctx.fillStyle = PALETTE.INDIGO;
+      this.ctx.fillRect(x - 3, y - 19, 2, 2);
+      this.ctx.fillRect(x + 1, y - 19, 2, 2);
+
+      this.ctx.fillStyle = PALETTE.FOG;
+      this.ctx.fillRect(x - 6, y - 13, 12, 12);
+      this.ctx.fillStyle = '#C0D0E8';
+      this.ctx.fillRect(x - 5, y - 12, 10, 10);
+
+      var walkOff = this.npc.moving ? Math.sin(this.tick * 0.05) * 3 : 0;
+      this.ctx.fillStyle = PALETTE.FOG;
+      this.ctx.fillRect(x - 5, y - 1 + walkOff, 4, 8);
+      this.ctx.fillRect(x + 1, y - 1 - walkOff, 4, 8);
+
+      this.ctx.fillStyle = PALETTE.INDIGO;
+      this.ctx.font = '10px "Noto Sans SC", sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('镜我', x, y + 18);
+
+      if (this.isNight) {
+        var glowAlpha = 0.08 + Math.sin(this.tick * 0.02) * 0.04;
+        this.ctx.fillStyle = 'rgba(180,199,231,' + glowAlpha + ')';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y - 8, 20, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      return { sortY: this.npc.my * TOWN_CONFIG.isoTileH + 20 };
+    };
+
+    IsometricEngine.prototype.drawFlower = function (f) {
+      var p = isoToScreen(f.gx, f.gy);
+      this.ctx.fillStyle = f.color;
+      this.ctx.fillRect(p.x + this.cam.x - f.size / 2, p.y + this.cam.y - f.size / 2, f.size, f.size);
+      this.ctx.fillStyle = PALETTE.HIGHLIGHT;
+      this.ctx.fillRect(p.x + this.cam.x - f.size / 2 + 1, p.y + this.cam.y - f.size / 2 + 1, f.size - 2, f.size - 2);
+      return { sortY: f.gy * TOWN_CONFIG.isoTileH + 5 };
+    };
+
+    IsometricEngine.prototype.drawParticles = function () {
+      this.ctx.fillStyle = '#FFE880';
+      var time = Date.now();
+      for (var i = 0; i < this.particles.length; i++) {
+        var p = this.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        var alpha = 0.4 + Math.sin(time * 0.003 + p.x) * 0.4;
+        this.ctx.globalAlpha = Math.max(0, alpha);
+        this.ctx.fillRect(p.x + this.cam.x, p.y + this.cam.y, p.size, p.size);
+        if (p.x < -100 || p.x > 1400 || p.y < -100 || p.y > 800) {
+          p.x = Math.random() * 1200;
+          p.y = Math.random() * 600;
+        }
+      }
+      this.ctx.globalAlpha = 1;
+    };
+
+    IsometricEngine.prototype.drawSky = function () {
+      var w = this.canvas.width;
+      var h = this.canvas.height;
+      var g = this.ctx.createLinearGradient(0, 0, 0, h);
+      if (this.isNight) {
+        g.addColorStop(0, '#0A0E18');
+        g.addColorStop(0.6, '#141828');
+        g.addColorStop(1, '#1E2238');
+      } else {
+        g.addColorStop(0, '#C8D8E8');
+        g.addColorStop(0.6, '#D8E4F0');
+        g.addColorStop(1, '#E8E0D5');
+      }
+      this.ctx.fillStyle = g;
+      this.ctx.fillRect(0, 0, w, h);
+
+      if (this.isNight) {
+        this.ctx.fillStyle = '#FFE8A0';
+        for (var i = 0; i < 50; i++) {
+          var sx = (i * 137 + 50) % w;
+          var sy = (i * 73 + 20) % (h * 0.35);
+          var tw = 0.3 + Math.sin(this.tick * 0.03 + i) * 0.4;
+          if (tw > 0) {
+            this.ctx.globalAlpha = Math.max(0, tw);
+            this.ctx.fillRect(sx, sy, 2, 2);
+          }
+        }
+        this.ctx.globalAlpha = 1;
+      }
+
+      for (var x = 0; x < w; x += 2) {
+        var mh = h * 0.3 - (Math.sin((x - this.cam.x) * 0.006) * 25 + Math.sin((x - this.cam.x) * 0.015) * 12);
+        this.ctx.fillStyle = this.isNight ? '#181E2A' : '#B8C0C8';
+        this.ctx.fillRect(x, mh, 2, h * 0.38 - mh);
+      }
+    };
+
+    IsometricEngine.prototype.drawNightOverlay = function () {
+      var target = this.isNight ? 0.72 : 0;
+      this.nightAlpha += (target - this.nightAlpha) * 0.05;
+      if (Math.abs(this.nightAlpha - target) < 0.001) this.nightAlpha = target;
+      if (this.nightAlpha > 0.01) {
+        this.ctx.fillStyle = 'rgba(10,14,24,' + this.nightAlpha + ')';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+    };
+
+    IsometricEngine.prototype.render = function () {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      this.drawSky();
+
+      var W = TOWN_CONFIG.mapWidth;
+      var H = TOWN_CONFIG.mapHeight;
+
+      for (var gy = 0; gy < H; gy++) {
+        for (var gx = 0; gx < W; gx++) {
+          var isPath = (gx >= 5 && gx <= 10 && gy >= 2 && gy <= 13) || (gx >= 0 && gx <= 16 && gy >= 5 && gy <= 7);
+          var isWater = (gx >= 13 && gx <= 16 && gy >= 10 && gy <= 12);
+          var col;
+          if (isWater) {
+            col = ((gx + gy) % 2 === 0) ? PALETTE.WATER : lighten(PALETTE.WATER, 1);
+          } else if (isPath) {
+            col = ((gx + gy) % 2 === 0) ? PALETTE.APRICOT : darken(PALETTE.APRICOT, 1);
+          } else {
+            col = ((gx + gy) % 3 === 0) ? PALETTE.MOSS : (((gx + gy) % 3 === 1) ? darken(PALETTE.MOSS, 1) : lighten(PALETTE.MOSS, 1));
+          }
+
+          var p = isoToScreen(gx, gy);
+          var sx = p.x + this.cam.x;
+          var sy = p.y + this.cam.y;
+          if (sx > -80 && sx < this.canvas.width + 80 && sy > -80 && sy < this.canvas.height + 80) {
+            this.drawIsoTile(gx, gy, col);
+          }
+        }
+      }
+
+      var renderList = [];
+
+      for (var i = 0; i < TOWN_CONFIG.buildings.length; i++) {
+        var b = TOWN_CONFIG.buildings[i];
+        var p = isoToScreen(b.grid.x + b.size.w / 2, b.grid.y + b.size.h / 2);
+        var sx = p.x + this.cam.x;
+        var sy = p.y + this.cam.y;
+        if (sx > -200 && sx < this.canvas.width + 200 && sy > -200 && sy < this.canvas.height + 200) {
+          var info = this.drawBuilding(b);
+          renderList.push({ type: 'building', sortY: info.sortY, id: b.id, bounds: info.bounds });
+        }
+      }
+
+      for (var i = 0; i < this.trees.length; i++) {
+        var t = this.trees[i];
+        var p = isoToScreen(t.x, t.y);
+        var sx = p.x + this.cam.x;
+        var sy = p.y + this.cam.y;
+        if (sx > -100 && sx < this.canvas.width + 100 && sy > -100 && sy < this.canvas.height + 100) {
+          var info = this.drawTree(t);
+          renderList.push({ type: 'tree', sortY: info.sortY });
+        }
+      }
+
+      for (var i = 0; i < this.flowers.length; i++) {
+        var f = this.flowers[i];
+        var p = isoToScreen(f.gx, f.gy);
+        var sx = p.x + this.cam.x;
+        var sy = p.y + this.cam.y;
+        if (sx > -50 && sx < this.canvas.width + 50 && sy > -50 && sy < this.canvas.height + 50) {
+          var info = this.drawFlower(f);
+          renderList.push({ type: 'flower', sortY: info.sortY });
+        }
+      }
+
+      var npcInfo = this.drawNPC();
+      renderList.push({ type: 'npc', sortY: npcInfo.sortY });
+
+      this.drawParticles();
+
+      this.ctx.globalAlpha = 0.02;
+      this.ctx.fillStyle = '#000';
+      for (var y = 0; y < this.canvas.height; y += 2) {
+        this.ctx.fillRect(0, y, this.canvas.width, 1);
+      }
+      this.ctx.globalAlpha = 1;
+
+      this.drawNightOverlay();
+
+      this._hitBuildings = [];
+      for (var i = 0; i < renderList.length; i++) {
+        if (renderList[i].type === 'building') {
+          this._hitBuildings.push(renderList[i]);
+        }
+      }
+    };
+
+    IsometricEngine.prototype.update = function () {
+      this.tick++;
+
+      this.cam.x += (this.cam.tx - this.cam.x) * 0.12;
+      this.cam.y += (this.cam.ty - this.cam.y) * 0.12;
+
+      if (!this.npc.moving && this.tick % 180 === 0) {
+        var dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+        var d = dirs[(Math.random() * dirs.length) | 0];
+        this.npc.tx = Math.max(1, Math.min(17, this.npc.mx + d[0]));
+        this.npc.ty = Math.max(1, Math.min(13, this.npc.my + d[1]));
+      }
+      var dx = this.npc.tx - this.npc.mx;
+      var dy = this.npc.ty - this.npc.my;
+      var dist = Math.abs(dx) + Math.abs(dy);
+      this.npc.moving = dist > 0.05;
+      if (this.npc.moving) {
+        this.npc.mx += dx * 0.04;
+        this.npc.my += dy * 0.04;
+      }
+    };
+
+    IsometricEngine.prototype.loop = function () {
+      var self = this;
+      function frame() {
+        self.update();
+        self.render();
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    };
+
+    IsometricEngine.prototype.bindEvents = function () {
+      var self = this;
+      var dragging = false;
+      var lastX = 0, lastY = 0;
+
+      this.canvas.addEventListener('mousedown', function (e) {
+        dragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        self.cam.tx += e.clientX - lastX;
+        self.cam.ty += e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+      });
+
+      window.addEventListener('mouseup', function () {
+        dragging = false;
+      });
+
+      this.canvas.addEventListener('touchstart', function (e) {
+        dragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', function (e) {
+        if (!dragging) return;
+        self.cam.tx += e.touches[0].clientX - lastX;
+        self.cam.ty += e.touches[0].clientY - lastY;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      }, { passive: true });
+
+      window.addEventListener('touchend', function () {
+        dragging = false;
+      });
+
+      this.canvas.addEventListener('click', function (e) {
+        var rect = self.canvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+
+        if (self._hitBuildings) {
+          for (var i = 0; i < self._hitBuildings.length; i++) {
+            var b = self._hitBuildings[i];
+            var bb = b.bounds;
+            if (mx >= bb.x && mx <= bb.x + bb.w && my >= bb.y && my <= bb.y + bb.h) {
+              var building = null;
+              for (var j = 0; j < TOWN_CONFIG.buildings.length; j++) {
+                if (TOWN_CONFIG.buildings[j].id === b.id) {
+                  building = TOWN_CONFIG.buildings[j];
+                  break;
+                }
+              }
+              if (building) {
+                showDialogue(building.icon + ' ' + building.name + '\uFF08' + building.nameEn + '\uFF09', building.desc);
+                updateInfoPanel(building);
+              }
+              return;
+            }
+          }
+        }
+
+        var np = isoToScreen(self.npc.mx, self.npc.my);
+        var nsx = np.x + self.cam.x;
+        var nsy = np.y + self.cam.y - 18;
+        if (Math.abs(mx - nsx) < 20 && Math.abs(my - nsy) < 30) {
+          var lines = [
+            '你今天看起来有些疲惫呢。坐下来聊聊吧。',
+            '我记得你上次说过的事\u2026\u2026它还在你心里吗？',
+            '有时候安静地待一会儿，比什么都重要。',
+            '你看，萤火虫飞过来了。每一只都带着一个小心愿。',
+            '这个小镇是你内心的倒影。每个角落都藏着一段记忆。'
+          ];
+          showDialogue('\u{1FA9E} 镜我', lines[(Math.random() * lines.length) | 0]);
+        }
+      });
+
+      window.addEventListener('resize', function () {
+        self.resize();
+      });
+    };
+
+    IsometricEngine.prototype.toggleDayNight = function () {
+      this.isNight = !this.isNight;
+      var icon = document.getElementById('weatherIcon');
+      var text = document.getElementById('timeText');
+      if (this.isNight) {
+        icon.innerHTML = '&#127769;';
+        text.textContent = '夜晚 · 晴';
+        showDialogue('\u{1FA9E} 镜我', '\u{1F319} 夜幕降临，灯笼亮起，萤火虫出没\u2026\u2026');
+      } else {
+        icon.innerHTML = '&#9728;';
+        text.textContent = '午后 · 晴';
+        showDialogue('\u{1FA9E} 镜我', '\u2600 晨光透过薄雾，小镇苏醒了。');
+      }
+    };
+
+    // ===== 5. UI 控制器 =====
+    var engine = null;
+    var writer = null;
+
+    function showDialogue(speaker, text) {
+      var bubble = document.getElementById('dialogueBubble');
+      var spk = document.getElementById('dialogueSpeaker');
+      spk.innerHTML = speaker;
+      bubble.classList.add('show');
+      if (!writer) {
+        writer = new Typewriter(document.getElementById('dialogueText'), {
+          speed: 28,
+          onDone: function () {
+            setTimeout(function () {
+              bubble.classList.remove('show');
+            }, 3500);
+          }
+        });
+      }
+      writer.type(text);
+    }
+
+    function updateInfoPanel(b) {
+      var panel = document.getElementById('infoPanel');
+      panel.querySelector('h3').innerHTML = '&#9656; ' + b.icon + ' ' + b.name;
+      panel.querySelector('.content').innerHTML = b.desc.replace(/\n/g, '<br>') + '<br><br>点击镜我进行对话，或探索其他建筑。';
+      panel.querySelector('.hint').textContent = b.nameEn;
+    }
+
+    // 导航
+    var navItems = document.querySelectorAll('.nav-item');
+    for (var i = 0; i < navItems.length; i++) {
+      navItems[i].addEventListener('click', function () {
+        var clicked = this;
+        for (var j = 0; j < navItems.length; j++) {
+          navItems[j].classList.remove('active');
+        }
+        clicked.classList.add('active');
+        var bid = clicked.getAttribute('data-bid');
+        if (bid && engine) {
+          engine.focusOnBuilding(bid);
+          var b = null;
+          for (var k = 0; k < TOWN_CONFIG.buildings.length; k++) {
+            if (TOWN_CONFIG.buildings[k].id === bid) {
+              b = TOWN_CONFIG.buildings[k];
+              break;
+            }
+          }
+          if (b) showDialogue('\u{1FA9E} 镜我', '正在前往' + b.name + '\u2026\u2026');
+        } else if (clicked.getAttribute('data-loc') === 'town' && engine) {
+          engine.centerCamera();
+        }
+      });
+    }
+
+    // 面板折叠
+    document.getElementById('panelToggleBtn').addEventListener('click', function () {
+      document.getElementById('infoPanel').classList.toggle('collapsed');
+    });
+
+    // 键盘
+    document.addEventListener('keydown', function (e) {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (engine) engine.toggleDayNight();
+      }
+    });
+
+    // ===== 6. 启动 =====
+    function startApp() {
+      try {
+        setLoadingSub('初始化 Canvas 引擎...');
+        engine = new IsometricEngine('gameCanvas');
+
+        setLoadingSub('准备进入小镇...');
+        setTimeout(function () {
+          hideLoading();
+          setTimeout(function () {
+            showDialogue('\u{1FA9E} 镜我', '欢迎来到心屿。这个小镇是你内心的倒影。');
+          }, 400);
+        }, 600);
+      } catch (err) {
+        console.error('初始化失败:', err);
+        setLoadingError(err.message || '未知错误');
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startApp);
+    } else {
+      startApp();
+    }
+  </script>
+</body>
+
+</html>

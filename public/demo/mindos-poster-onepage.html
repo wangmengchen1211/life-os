@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindOS — 你的心智系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ===== Reset & Variables ===== */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --c-mint: #80cbc4;
+      --c-blue: #9bb8d4;
+      --c-lavender: #a78bfa;
+      --c-warm: #ffcc80;
+      --c-text: #2d3748;
+      --c-text-sub: #5a6577;
+      --c-text-muted: #8b95a5;
+      --c-bg-end: rgba(238, 249, 247, 1);
+      --font: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      --ls-title: 0.12em;
+      --ls-body: 0.06em;
+      --ls-label: 0.08em;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ===== Slide Container ===== */
+    .slide {
+      width: 750px;
+      height: 1334px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(168deg,
+          #eef9f7 0%, #e8f5e9 20%, #e0f2f1 40%,
+          #e3f2fd 58%, #f3e5f5 76%, #fff8e1 100%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Ambient glow - subtle only */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: -8%;
+      left: -12%;
+      width: 50%;
+      height: 36%;
+      background: #a8e6cf;
+      border-radius: 50%;
+      opacity: 0.08;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+
+    .slide::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      right: -8%;
+      width: 40%;
+      height: 30%;
+      background: #b39ddb;
+      border-radius: 50%;
+      opacity: 0.06;
+      filter: blur(110px);
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       ZONE 1 — Header (Title Area)
+       ============================================================ */
+    .header {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 56px 48px 0;
+      position: relative;
+      z-index: 5;
+    }
+
+    .header__brand {
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: var(--ls-label);
+      color: var(--c-text-muted);
+    }
+
+    .header__brand em {
+      font-style: normal;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--c-mint), var(--c-lavender));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header__title {
+      font-size: 58px;
+      font-weight: 300;
+      letter-spacing: var(--ls-title);
+      color: var(--c-text);
+      line-height: 1.25;
+      margin-top: 6px;
+    }
+
+    .header__title em {
+      font-style: normal;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--c-mint), var(--c-blue), var(--c-lavender));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header__divider {
+      width: 48px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--c-mint), transparent);
+      margin: 14px auto 0;
+    }
+
+    .header__tagline {
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: var(--ls-body);
+      color: var(--c-text-sub);
+      margin-top: 10px;
+    }
+
+    /* ============================================================
+       ZONE 2 — Stage (Phone + Bubbles)
+       ============================================================ */
+    .stage {
+      flex: 1;
+      position: relative;
+      z-index: 3;
+      min-height: 0;
+    }
+
+    /* --- Phone --- */
+    .phone {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 280px;
+      z-index: 2;
+    }
+
+    .phone__glow {
+      position: absolute;
+      top: -30%;
+      left: -30%;
+      width: 160%;
+      height: 150%;
+      background: radial-gradient(ellipse, rgba(128, 203, 196, 0.09) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .phone__frame {
+      width: 100%;
+      background: linear-gradient(145deg, #f5efe6, #ebe4d8, #e8e0d4);
+      border-radius: 42px 42px 0 0;
+      padding: 10px 10px 0;
+      box-shadow:
+        0 0 0 1px rgba(200, 190, 175, 0.28),
+        0 24px 64px rgba(0, 0, 0, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      position: relative;
+      z-index: 1;
+    }
+
+    .phone__screen {
+      width: 100%;
+      border-radius: 34px 34px 0 0;
+      overflow: hidden;
+      background: #faf7f2;
+    }
+
+    .phone__screen img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: top center;
+      height: 420px;
+    }
+
+    /* Bottom fade cut */
+    .phone__cut {
+      position: absolute;
+      bottom: 0;
+      left: -32px;
+      right: -32px;
+      height: 54px;
+      background: linear-gradient(to bottom, transparent, var(--c-bg-end));
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* --- Bubble Groups --- */
+    .bubble-group {
+      position: absolute;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 190px;
+    }
+
+    /* --- Bubble (colored header) --- */
+    .bubble {
+      padding: 7px 12px 6px;
+      border-radius: 12px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.40);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03), 0 4px 10px rgba(0, 0, 0, 0.04);
+      white-space: nowrap;
+    }
+
+    .bubble__icon {
+      font-size: 12px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bubble__text {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: var(--ls-body);
+      line-height: 1.3;
+    }
+
+    /* Bubble 1 — Left, Mint */
+    .bubble--mint {
+      background: linear-gradient(135deg, rgba(128, 203, 196, 0.30), rgba(200, 242, 238, 0.44));
+      color: #2a7a70;
+      border-color: rgba(128, 203, 196, 0.28);
+    }
+
+    /* Bubble 2 — Right, Lavender */
+    .bubble--lavender {
+      background: linear-gradient(135deg, rgba(179, 157, 219, 0.28), rgba(218, 206, 240, 0.44));
+      color: #5a3590;
+      border-color: rgba(179, 157, 219, 0.28);
+    }
+
+    /* Bubble 3 — Left, Warm */
+    .bubble--warm {
+      background: linear-gradient(135deg, rgba(255, 204, 128, 0.30), rgba(255, 230, 180, 0.46));
+      color: #7a5a10;
+      border-color: rgba(255, 204, 128, 0.28);
+    }
+
+    /* --- Bubble Sub-Card --- */
+    .bubble-card {
+      background: rgba(255, 255, 255, 0.52);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.50);
+      border-radius: 10px;
+      padding: 8px 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
+    }
+
+    /* === Demo: 知识收录 Capture === */
+    .demo-capture__textarea {
+      width: 100%;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.50);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      padding: 5px 7px;
+      font-size: 10px;
+      color: #9ca3af;
+      line-height: 1.3;
+      resize: none;
+      margin-bottom: 5px;
+    }
+
+    .demo-capture__tags {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+    }
+
+    .demo-capture__tag {
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      background: rgba(128, 203, 196, 0.16);
+      color: #2a7a70;
+    }
+
+    .demo-capture__tag--ai {
+      background: rgba(167, 139, 250, 0.12);
+      color: #5a3590;
+    }
+
+    /* === Demo: 思维蛛网 Graph === */
+    .demo-graph {
+      position: relative;
+      height: 60px;
+    }
+
+    .demo-graph__node {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      color: #fff;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .demo-graph__node--cognition { background: #7ecfc0; top: 2px; left: 8px; }
+    .demo-graph__node--tech { background: #42a5f5; top: 0; left: 56px; }
+    .demo-graph__node--human { background: #ab47bc; top: 32px; left: 2px; }
+    .demo-graph__node--creative { background: #ef5350; top: 34px; left: 50px; }
+    .demo-graph__node--life { background: #26c6da; top: 16px; left: 96px; }
+
+    .demo-graph__line {
+      position: absolute;
+      height: 1px;
+      background: rgba(0, 0, 0, 0.06);
+      transform-origin: left center;
+    }
+
+    .demo-graph__line--1 { top: 14px; left: 32px; width: 22px; transform: rotate(-6deg); }
+    .demo-graph__line--2 { top: 16px; left: 28px; width: 26px; transform: rotate(18deg); }
+    .demo-graph__line--3 { top: 24px; left: 58px; width: 18px; transform: rotate(14deg); }
+    .demo-graph__line--4 { top: 36px; left: 74px; width: 22px; transform: rotate(-12deg); }
+    .demo-graph__line--5 { top: 10px; left: 80px; width: 16px; transform: rotate(6deg); }
+
+    /* === Demo: 心智日志 MindLog === */
+    .demo-mindlog__keyword {
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.10em;
+      color: #374151;
+      margin-bottom: 1px;
+    }
+
+    .demo-mindlog__period {
+      font-size: 9px;
+      color: #9ca3af;
+      font-style: italic;
+      margin-bottom: 5px;
+    }
+
+    .demo-mindlog__section-title {
+      font-size: 9px;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 1px;
+    }
+
+    .demo-mindlog__section-body {
+      font-size: 10px;
+      line-height: 1.5;
+      color: #6b7280;
+    }
+
+    /* === Demo: 日记回音 Diary Echo === */
+    .demo-echo__user {
+      font-size: 10px;
+      color: #6b7280;
+      padding: 5px 8px;
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 8px 8px 8px 2px;
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+
+    .demo-echo__ai {
+      font-size: 10px;
+      color: #5a3590;
+      padding: 5px 8px;
+      background: rgba(179, 157, 219, 0.10);
+      border-radius: 8px 8px 2px 8px;
+      line-height: 1.5;
+    }
+
+    /* === Demo: 高频洞察 Insight === */
+    .demo-insight__row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+
+    .demo-insight__word {
+      font-size: 10px;
+      color: #5a6577;
+      width: 42px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .demo-insight__bar {
+      height: 5px;
+      border-radius: 3px;
+    }
+
+    .demo-insight__bar--1 { width: 70%; background: linear-gradient(90deg, #ffcc80, #ffb74d); }
+    .demo-insight__bar--2 { width: 52%; background: linear-gradient(90deg, #80cbc4, #4db6ac); }
+    .demo-insight__bar--3 { width: 38%; background: linear-gradient(90deg, #a78bfa, #9575cd); }
+
+    .demo-insight__count {
+      font-size: 9px;
+      color: #9ca3af;
+    }
+
+    /* === Demo: 人生信笺 Letter === */
+    .demo-letter {
+      text-align: center;
+    }
+
+    .demo-letter__icon {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .demo-letter__title {
+      font-size: 11px;
+      font-weight: 400;
+      color: #5a6577;
+      letter-spacing: 0.05em;
+    }
+
+    .demo-letter__date {
+      font-size: 9px;
+      color: #9ca3af;
+      margin-top: 1px;
+    }
+
+    /* Group 1 — Left, upper (对齐"下午好") */
+    .bubble-group--1 {
+      top: 32%;
+      left: 4%;
+    }
+
+    /* Group 2 — Right, middle */
+    .bubble-group--2 {
+      top: 42%;
+      right: 3%;
+    }
+
+    /* Group 3 — Left, lower (对齐"清客松") */
+    .bubble-group--3 {
+      top: 54%;
+      left: 4%;
+    }
+
+    /* ============================================================
+       ZONE 3 — Footer (Info Bar)
+       ============================================================ */
+    .footer {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      padding: 20px 48px 44px;
+    }
+
+    .footer__qr {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.50);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.60);
+      border-radius: 16px;
+      padding: 12px 18px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .footer__qr-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .footer__qr-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .footer__qr-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .footer__qr-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--c-text);
+      letter-spacing: var(--ls-body);
+    }
+
+    .footer__qr-title em {
+      font-style: normal;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--c-mint), var(--c-lavender));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer__qr-platform {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--c-text-muted);
+      letter-spacing: var(--ls-body);
+    }
+
+    .footer__info {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .footer__slogan {
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: var(--ls-label);
+      color: var(--c-text-sub);
+    }
+
+    .footer__slogan em {
+      font-style: normal;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--c-mint), var(--c-lavender));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer__url {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: var(--ls-body);
+      color: var(--c-text-muted);
+    }
+
+    .footer__privacy {
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: var(--ls-body);
+      color: var(--c-text-muted);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="slide">
+
+    <!-- ZONE 1: Header -->
+    <header class="header">
+      <p class="header__brand"><em>MindOS</em> — 你的心智系统</p>
+      <h1 class="header__title"><em>MindOS</em></h1>
+      <div class="header__divider"></div>
+      <p class="header__tagline">智能构建 · 私人专属 · 深度成长</p>
+    </header>
+
+    <!-- ZONE 2: Stage -->
+    <main class="stage">
+      <div class="phone">
+        <div class="phone__glow"></div>
+        <div class="phone__frame">
+          <div class="phone__screen">
+            <img src="poster-assets/dashboard.jpg" alt="MindOS 仪表盘">
+          </div>
+        </div>
+        <div class="phone__cut"></div>
+      </div>
+
+      <!-- 泡泡组1：左 · 薄荷（对齐"下午好"）-->
+      <div class="bubble-group bubble-group--1">
+        <div class="bubble bubble--mint">
+          <span class="bubble__icon">✦</span>
+          <span class="bubble__text">随手粘贴 AI自动搭建</span>
+        </div>
+        <div class="bubble-card">
+          <div class="demo-capture">
+            <div class="demo-capture__textarea">粘贴链接、文本或图片...</div>
+            <div class="demo-capture__tags">
+              <span class="demo-capture__tag">认知与思维</span>
+              <span class="demo-capture__tag demo-capture__tag--ai">AI提炼</span>
+              <span class="demo-capture__tag">深度学习</span>
+            </div>
+          </div>
+        </div>
+        <div class="bubble-card">
+          <div class="demo-graph">
+            <div class="demo-graph__line demo-graph__line--1"></div>
+            <div class="demo-graph__line demo-graph__line--2"></div>
+            <div class="demo-graph__line demo-graph__line--3"></div>
+            <div class="demo-graph__line demo-graph__line--4"></div>
+            <div class="demo-graph__line demo-graph__line--5"></div>
+            <div class="demo-graph__node demo-graph__node--cognition">认知</div>
+            <div class="demo-graph__node demo-graph__node--tech">科技</div>
+            <div class="demo-graph__node demo-graph__node--human">人文</div>
+            <div class="demo-graph__node demo-graph__node--creative">创意</div>
+            <div class="demo-graph__node demo-graph__node--life">生活</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 泡泡组2：右 · 薰衣草 -->
+      <div class="bubble-group bubble-group--2">
+        <div class="bubble bubble--lavender">
+          <span class="bubble__icon">✦</span>
+          <span class="bubble__text">有灵魂 有思想<br>有深度的洞察</span>
+        </div>
+        <div class="bubble-card">
+          <div class="demo-mindlog">
+            <div class="demo-mindlog__keyword">灰调 · 重连</div>
+            <div class="demo-mindlog__period">5月16日 ~ 5月22日</div>
+            <div class="demo-mindlog__section-title">心智回响</div>
+            <div class="demo-mindlog__section-body">本周情绪基调偏灰，但重连的线索正在生长…</div>
+          </div>
+        </div>
+        <div class="bubble-card">
+          <div class="demo-echo">
+            <div class="demo-echo__user">反复在同一个问题上消耗精力，是不是在回避更深层的选择？</div>
+            <div class="demo-echo__ai">你习惯用忙碌填补不安，但真正的转折，往往从允许自己停下来开始。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 泡泡组3：左 · 暖橙（对齐"清客松"）-->
+      <div class="bubble-group bubble-group--3">
+        <div class="bubble bubble--warm">
+          <span class="bubble__icon">✦</span>
+          <span class="bubble__text">平行时空的成长洞察</span>
+        </div>
+        <div class="bubble-card">
+          <div class="demo-insight">
+            <div class="demo-insight__row">
+              <span class="demo-insight__word">创造力</span>
+              <div class="demo-insight__bar demo-insight__bar--1"></div>
+              <span class="demo-insight__count">14</span>
+            </div>
+            <div class="demo-insight__row">
+              <span class="demo-insight__word">压力</span>
+              <div class="demo-insight__bar demo-insight__bar--2"></div>
+              <span class="demo-insight__count">9</span>
+            </div>
+            <div class="demo-insight__row">
+              <span class="demo-insight__word">成长</span>
+              <div class="demo-insight__bar demo-insight__bar--3"></div>
+              <span class="demo-insight__count">6</span>
+            </div>
+          </div>
+        </div>
+        <div class="bubble-card">
+          <div class="demo-letter">
+            <div class="demo-letter__icon">✉</div>
+            <div class="demo-letter__title">来自五月的信</div>
+            <div class="demo-letter__date">2026年5月 信件</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ZONE 3: Footer -->
+    <footer class="footer">
+      <div class="footer__qr">
+        <div class="footer__qr-img">
+          <img src="poster-assets/qr-code.png" alt="扫码体验">
+        </div>
+        <div class="footer__qr-text">
+          <p class="footer__qr-title">扫码体验 <em>MindOS</em></p>
+          <p class="footer__qr-platform">iOS · Android · Web</p>
+        </div>
+      </div>
+      <div class="footer__info">
+        <p class="footer__slogan"><em>MindOS</em> — 你的心智系统</p>
+        <p class="footer__url">mindos.app</p>
+        <p class="footer__privacy">本地优先 · 隐私即自由</p>
+      </div>
+    </footer>
+
+  </div>
+
+</body>
+
+</html>

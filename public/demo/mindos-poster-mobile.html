@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindOS — 你的心智系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@200;300;400;500;700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --accent-lavender: #b39ddb;
+      --accent-mint: #80cbc4;
+      --accent-warm: #ffcc80;
+      --accent-mirror: #a78bfa;
+      --color-text: #2d3748;
+      --color-text-secondary: #6b7280;
+      --color-text-muted: #9ca3af;
+      --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: #e8e8e6;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ===== 海报主体 9:16 ===== */
+    .poster {
+      width: 750px;
+      min-height: 1100px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(168deg, #eef9f7 0%, #e8f5e9 18%, #e0f2f1 34%, #e3f2fd 52%, #f3e5f5 70%, #fce4ec 86%, #fff8e1 100%);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+    }
+
+    .poster::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: -15%;
+      width: 55%;
+      height: 40%;
+      background: #a8e6cf;
+      border-radius: 50%;
+      opacity: 0.10;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+
+    .poster::after {
+      content: '';
+      position: absolute;
+      bottom: -12%;
+      right: -10%;
+      width: 45%;
+      height: 35%;
+      background: #b39ddb;
+      border-radius: 50%;
+      opacity: 0.07;
+      filter: blur(110px);
+      pointer-events: none;
+    }
+
+    /* ===== 品牌头部 ===== */
+    .brand-header {
+      text-align: center;
+      padding: 52px 40px 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-logo {
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 10px;
+    }
+
+    .brand-logo span {
+      font-weight: 500;
+      color: var(--accent-mint);
+    }
+
+    .slogan-main {
+      font-size: 56px;
+      font-weight: 200;
+      letter-spacing: 0.12em;
+      color: var(--color-text);
+      line-height: 1.3;
+      margin-top: 10px;
+    }
+
+    .slogan-main em {
+      font-style: normal;
+      font-weight: 500;
+      background: linear-gradient(135deg, #80cbc4, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slogan-divider {
+      width: 56px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-mint), transparent);
+      margin: 20px auto;
+    }
+
+    .slogan-sub {
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: var(--color-text-secondary);
+      line-height: 1.8;
+    }
+
+    /* ===== 半截手机 + 泡泡舞台 ===== */
+    .phone-stage {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 24px;
+      padding: 60px 0 40px;
+      min-height: 520px;
+    }
+
+    .phone-half {
+      position: relative;
+      width: 260px;
+      z-index: 2;
+    }
+
+    .phone-half-glow {
+      position: absolute;
+      top: -30%;
+      left: -30%;
+      width: 160%;
+      height: 160%;
+      background: radial-gradient(ellipse, rgba(128, 203, 196, 0.10) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .phone-half-frame {
+      width: 100%;
+      background: linear-gradient(145deg, #f5efe6, #ebe4d8, #e8e0d4);
+      border-radius: 42px 42px 0 0;
+      padding: 10px 10px 0;
+      box-shadow:
+        0 0 0 1px rgba(200, 190, 175, 0.30),
+        0 24px 64px rgba(0, 0, 0, 0.12),
+        0 0 70px rgba(128, 203, 196, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.50);
+      position: relative;
+      z-index: 1;
+    }
+
+    .phone-half-screen {
+      width: 100%;
+      border-radius: 34px 34px 0 0;
+      overflow: hidden;
+      background: #faf7f2;
+    }
+
+    .phone-half-screen img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: top center;
+      height: 310px;
+    }
+
+    /* 手机底部切割渐变 */
+    .phone-half::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -40px;
+      right: -40px;
+      height: 50px;
+      background: linear-gradient(to bottom, transparent, rgba(238, 249, 247, 0.8));
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* ===== 泡泡框 ===== */
+    .bubble {
+      position: absolute;
+      z-index: 10;
+      padding: 14px 20px 12px;
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.82);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.10),
+        0 16px 44px rgba(0, 0, 0, 0.12),
+        0 30px 72px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.80);
+      white-space: nowrap;
+    }
+
+    /* 泡泡三角箭头 */
+    .bubble::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      transform: rotate(45deg);
+    }
+
+    /* 泡泡一：左上 - 薄荷 */
+    .bubble.b1 {
+      top: 0;
+      left: 0;
+      background: linear-gradient(135deg, rgba(128, 203, 196, 0.62), rgba(200, 242, 238, 0.78));
+      color: #1a5e54;
+      border-color: rgba(128, 203, 196, 0.60);
+    }
+
+    .bubble.b1::after {
+      bottom: -7px;
+      right: 28px;
+      background: rgba(180, 230, 224, 0.70);
+      border-right: 2px solid rgba(128, 203, 196, 0.60);
+      border-bottom: 2px solid rgba(128, 203, 196, 0.60);
+    }
+
+    /* 泡泡二：右上 - 薰衣草 */
+    .bubble.b2 {
+      top: 40%;
+      right: -14px;
+      background: linear-gradient(135deg, rgba(179, 157, 219, 0.58), rgba(218, 206, 240, 0.78));
+      color: #3d1f6e;
+      border-color: rgba(179, 157, 219, 0.58);
+    }
+
+    .bubble.b2::after {
+      left: -7px;
+      top: 18px;
+      background: rgba(208, 194, 236, 0.70);
+      border-left: 2px solid rgba(179, 157, 219, 0.58);
+      border-top: 2px solid rgba(179, 157, 219, 0.58);
+    }
+
+    /* 泡泡三：左下 - 暖橙 */
+    .bubble.b3 {
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(135deg, rgba(255, 204, 128, 0.60), rgba(255, 230, 180, 0.80));
+      color: #6e4c08;
+      border-color: rgba(255, 204, 128, 0.60);
+    }
+
+    .bubble.b3::after {
+      top: -7px;
+      right: 36px;
+      background: rgba(255, 220, 160, 0.70);
+      border-left: 2px solid rgba(255, 204, 128, 0.60);
+      border-top: 2px solid rgba(255, 204, 128, 0.60);
+    }
+
+    .bubble-icon {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bubble-text {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1.4;
+    }
+
+    /* ===== 关键词区域 ===== */
+    .keywords-section {
+      text-align: center;
+      padding: 16px 32px 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .keywords-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .keyword-pill {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.10em;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .keyword-pill:nth-child(1) {
+      background: rgba(128, 203, 196, 0.08);
+      color: #4db6ac;
+    }
+
+    .keyword-pill:nth-child(2) {
+      background: rgba(167, 139, 250, 0.08);
+      color: #7c5fc7;
+    }
+
+    .keyword-pill:nth-child(3) {
+      background: rgba(128, 203, 196, 0.06);
+      color: #5bb8ac;
+    }
+
+    .keyword-pill:nth-child(4) {
+      background: rgba(179, 157, 219, 0.08);
+      color: #8e6cb8;
+    }
+
+    /* ===== 扩展功能区域 ===== */
+    .extended-section {
+      padding: 6px 32px 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .extended-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.20em;
+      color: var(--color-text-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .extended-grid {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .extended-card {
+      flex: 1;
+      padding: 12px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+      text-align: center;
+    }
+
+    .extended-icon {
+      margin-bottom: 4px;
+    }
+
+    .extended-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text);
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+    }
+
+    .extended-desc {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ===== 二维码区域 ===== */
+    .qr-section {
+      text-align: center;
+      padding: 10px 32px 6px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .qr-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 14px;
+      padding: 14px 22px 12px;
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.03),
+        0 5px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .qr-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .qr-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .qr-hint {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.08em;
+    }
+
+    .qr-hint em {
+      font-style: normal;
+      font-weight: 500;
+      color: var(--accent-mint);
+    }
+
+    /* ===== 底部 ===== */
+    .poster-footer {
+      text-align: center;
+      padding: 8px 32px 36px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer-divider {
+      width: 140px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
+      margin: 0 auto 14px;
+    }
+
+    .footer-brand {
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+    }
+
+    .footer-brand span {
+      font-weight: 500;
+      color: var(--accent-mint);
+    }
+
+    .footer-links {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+    }
+
+    /* ===== 装饰粒子 ===== */
+    .deco-particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .deco-particle.p1 {
+      width: 6px;
+      height: 6px;
+      background: rgba(179, 157, 219, 0.20);
+      top: 8%;
+      left: 6%;
+    }
+
+    .deco-particle.p2 {
+      width: 4px;
+      height: 4px;
+      background: rgba(128, 203, 196, 0.24);
+      top: 22%;
+      right: 6%;
+    }
+
+    .deco-particle.p3 {
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 204, 128, 0.14);
+      bottom: 20%;
+      left: 5%;
+    }
+
+    .deco-particle.p4 {
+      width: 3px;
+      height: 3px;
+      background: rgba(167, 139, 250, 0.18);
+      top: 55%;
+      right: 8%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="poster">
+    <div class="deco-particle p1"></div>
+    <div class="deco-particle p2"></div>
+    <div class="deco-particle p3"></div>
+    <div class="deco-particle p4"></div>
+
+    <!-- ===== 品牌头部 ===== -->
+    <div class="brand-header">
+      <div class="brand-logo"><span>MindOS</span> &mdash; 你的心智系统</div>
+      <h1 class="slogan-main"><em>MindOS</em></h1>
+      <h2 class="slogan-main" style="font-size:36px;margin-top:4px;">你的心智系统</h2>
+      <div class="slogan-divider"></div>
+      <p class="slogan-sub">智能构建 · 私人专属 · 多模态分析 · 深度成长</p>
+    </div>
+
+    <!-- ===== 半截手机 + 泡泡 ===== -->
+    <div class="phone-stage">
+      <div class="phone-half">
+        <div class="phone-half-glow"></div>
+        <div class="phone-half-frame">
+          <div class="phone-half-screen">
+            <img src="poster-assets/dashboard.jpg" alt="MindOS 仪表盘">
+          </div>
+        </div>
+      </div>
+
+      <!-- 泡泡一：左上 -->
+      <div class="bubble b1">
+        <span class="bubble-icon">✦</span>
+        <span class="bubble-text">随手粘贴 AI自动搭建</span>
+      </div>
+
+      <!-- 泡泡二：右侧 -->
+      <div class="bubble b2">
+        <span class="bubble-icon">✦</span>
+        <span class="bubble-text">有灵魂 有思想<br>有深度的洞察</span>
+      </div>
+
+      <!-- 泡泡三：左下 -->
+      <div class="bubble b3">
+        <span class="bubble-icon">✦</span>
+        <span class="bubble-text">平行时空的成长洞察</span>
+      </div>
+    </div>
+
+
+    <!-- ===== 关键词区域 ===== -->
+    <div class="keywords-section">
+      <div class="keywords-row">
+        <span class="keyword-pill">智能构建</span>
+        <span class="keyword-pill">私人专属</span>
+        <span class="keyword-pill">多模态分析</span>
+        <span class="keyword-pill">深度成长</span>
+      </div>
+    </div>
+
+    <!-- ===== 扩展功能区域 ===== -->
+    <div class="extended-section">
+      <div class="extended-title">更多可能</div>
+      <div class="extended-grid">
+        <div class="extended-card">
+          <div class="extended-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffcc80" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="extended-name">Todo 轻约</div>
+          <div class="extended-desc">轻松约定待办</div>
+        </div>
+        <div class="extended-card">
+          <div class="extended-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <div class="extended-name">Obsidian 导入</div>
+          <div class="extended-desc">接入知识库</div>
+        </div>
+        <div class="extended-card">
+          <div class="extended-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#80cbc4" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <div class="extended-name">MindLog</div>
+          <div class="extended-desc">每日心智分析</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 二维码区域 ===== -->
+    <div class="qr-section">
+      <div class="qr-card">
+        <div class="qr-image">
+          <img src="poster-assets/qr-code.png" alt="扫码体验 MindOS">
+        </div>
+        <div class="qr-hint">扫码即刻体验 <em>MindOS</em></div>
+      </div>
+    </div>
+
+    <!-- ===== 底部 ===== -->
+    <div class="poster-footer">
+      <div class="footer-divider"></div>
+      <div class="footer-brand"><span>MindOS</span> &mdash; 你的心智系统</div>
+      <div class="footer-links">iOS &middot; Android &middot; Web &nbsp;|&nbsp; 本地优先 &middot; 隐私即自由</div>
+    </div>
+  </div>
+
+</body>
+
+</html>

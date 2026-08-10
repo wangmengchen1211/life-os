@@ -1,9 +1,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { notifyUpsert, notifyDelete } from '@/lib/sync/cloud';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface DiaryEntry {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   content: string;
   moodTags: string[];
   keyThemes: string[];
@@ -16,6 +19,8 @@ export interface DiaryEntry {
 
 export interface DiarySummary {
   id?: number;
+  /** 云端 UUID（Supabase 同步用） */
+  cloudId?: string;
   periodType: 'week' | 'month';
   periodStart: string;
   periodEnd: string;
@@ -107,6 +112,7 @@ export async function addEntry(
     updatedAt: entry.updatedAt || now,
   };
   const id = await db.add('entries', record);
+  notifyUpsert('diary_entries', id as number);
   return id as number;
 }
 
@@ -134,11 +140,14 @@ export async function updateEntry(
     updated.wordCount = updates.content.length;
   }
   await db.put('entries', updated);
+  notifyUpsert('diary_entries', id);
 }
 
 export async function deleteEntry(id: number): Promise<void> {
   const db = await initDB();
+  const existing = await db.get('entries', id);
   await db.delete('entries', id);
+  notifyDelete('diary_entries', existing?.cloudId);
 }
 
 export async function listEntries(options?: ListEntriesOptions): Promise<DiaryEntry[]> {
@@ -217,6 +226,7 @@ export async function addSummary(
     createdAt: summary.createdAt || new Date().toISOString(),
   };
   const id = await db.add('summaries', record);
+  notifyUpsert('diary_summaries', id as number);
   return id as number;
 }
 
