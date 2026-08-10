@@ -197,6 +197,9 @@ export default function DiaryWrite({ onSaved, onCancel, initialDate }: DiaryWrit
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">写日记</h2>
       </div>
 
+      {/* 可滚动内容区：图片多时只滚动中间区域，底部保存栏始终可见 */}
+      <div className="flex-1 min-h-0 overflow-y-auto mb-4">
+        <div className="flex flex-col min-h-full">
       {/* 日记日期选择（支持补写过去/未来的日记） */}
       <div className="mb-3 flex items-center gap-2">
         <Calendar size={15} className="text-[var(--text-secondary)] shrink-0" />
@@ -287,6 +290,8 @@ export default function DiaryWrite({ onSaved, onCancel, initialDate }: DiaryWrit
         className="hidden"
         onChange={handleImageSelect}
       />
+        </div>
+      </div>
 
       {/* 底部栏 */}
       <div className="flex items-center justify-between">
