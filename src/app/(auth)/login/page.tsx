@@ -1,9 +1,15 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+
+// ─── 防暴力破解：连续失败锁定 ───────────────────────────────────────────────
+const LOCK_KEY = 'mindos_login_lock_until';
+const FAILS_KEY = 'mindos_login_fails';
+const MAX_FAILS = 5; // 连续失败上限
+const LOCK_MS = 5 * 60 * 1000; // 锁定时长：5 分钟
 
 function LoginContent() {
   const [email, setEmail] = useState('');
@@ -15,8 +21,44 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 锁定状态（mount 后从 localStorage 恢复，避免 SSR 水合不一致）
+  const [lockUntil, setLockUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    setLockUntil(Number(localStorage.getItem(LOCK_KEY)) || 0);
+  }, []);
+  const locked = lockUntil > now;
+  useEffect(() => {
+    if (!locked) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [locked]);
+  const lockSecondsLeft = locked ? Math.ceil((lockUntil - now) / 1000) : 0;
+
+  function recordFailure() {
+    const fails = Number(localStorage.getItem(FAILS_KEY) || '0') + 1;
+    if (fails >= MAX_FAILS) {
+      const until = Date.now() + LOCK_MS;
+      localStorage.setItem(LOCK_KEY, String(until));
+      localStorage.removeItem(FAILS_KEY);
+      setLockUntil(until);
+      setNow(Date.now());
+      setError('尝试次数过多，请 5 分钟后再试');
+    } else {
+      localStorage.setItem(FAILS_KEY, String(fails));
+      setError(`邮箱或密码不正确（连续失败 ${fails}/${MAX_FAILS}）`);
+    }
+  }
+
+  function clearFailureState() {
+    localStorage.removeItem(LOCK_KEY);
+    localStorage.removeItem(FAILS_KEY);
+    setLockUntil(0);
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (locked || loading) return;
     if (mode === 'signup' && !agreed) return;
     setLoading(true);
     setError('');
@@ -30,9 +72,11 @@ function LoginContent() {
           password,
         });
         if (signInError) {
-          setError(signInError.message === 'Invalid login credentials'
-            ? '邮箱或密码不正确'
-            : signInError.message);
+          if (signInError.message === 'Invalid login credentials') {
+            recordFailure();
+          } else {
+            setError(signInError.message);
+          }
           return;
         }
       } else {
@@ -59,6 +103,7 @@ function LoginContent() {
       }
 
       // 登录成功
+      clearFailureState();
       const redirect = searchParams.get('redirect') || '/';
       router.push(redirect);
       router.refresh();
@@ -149,7 +194,7 @@ function LoginContent() {
 
           <button
             type="submit"
-            disabled={loading || !email || !password || (mode === 'signup' && !agreed)}
+            disabled={loading || locked || !email || !password || (mode === 'signup' && !agreed)}
             className="w-full py-3.5 rounded-2xl font-normal transition-all disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-xl"
             style={{
               background: 'rgba(77, 182, 160, 0.15)',
@@ -158,9 +203,11 @@ function LoginContent() {
           >
             {loading
               ? '处理中...'
-              : mode === 'login'
-                ? '进入 MindOS'
-                : '注册并进入'}
+              : locked
+                ? `已锁定，${Math.floor(lockSecondsLeft / 60)}:${String(lockSecondsLeft % 60).padStart(2, '0')} 后重试`
+                : mode === 'login'
+                  ? '进入 MindOS'
+                  : '注册并进入'}
           </button>
         </form>
 

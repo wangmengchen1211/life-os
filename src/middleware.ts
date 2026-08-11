@@ -2,6 +2,22 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
+/** 安全响应头：防降级、防点击劫持、防 MIME 嗅探、限制敏感权限 */
+const SECURITY_HEADERS: Record<string, string> = {
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -54,22 +70,24 @@ export async function middleware(request: NextRequest) {
   // 未登录用户访问受保护页面 → 重定向到登录页
   if (!user && !isPublic) {
     if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: '未登录' }, { status: 401 });
+      return applySecurityHeaders(
+        NextResponse.json({ error: '未登录' }, { status: 401 }),
+      );
     }
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
+    return applySecurityHeaders(NextResponse.redirect(url));
   }
 
   // 已登录用户访问登录页 → 重定向到主页
   if (user && pathname === '/login') {
     const url = request.nextUrl.clone();
     url.pathname = '/';
-    return NextResponse.redirect(url);
+    return applySecurityHeaders(NextResponse.redirect(url));
   }
 
-  return supabaseResponse;
+  return applySecurityHeaders(supabaseResponse);
 }
 
 export const config = {

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CircleUserRound, X, Settings, LogOut, Sparkles, ExternalLink, PenLine, Brain, CheckSquare, Sprout } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { getProfileStats, type ProfileStats } from '@/lib/storage/stats';
 import { getUserProfile, saveUserProfile } from '@/lib/storage/profile-store';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -61,7 +62,8 @@ export function ProfilePanel({ onClose }: ProfilePanelProps) {
   async function handleLogout() {
     setLoggingOut(true);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      // 走 Supabase Auth 真正登出（清除会话 JWT），随后中间件会拦截受保护页面
+      await createClient().auth.signOut();
       router.push('/login');
     } catch {
       setLoggingOut(false);

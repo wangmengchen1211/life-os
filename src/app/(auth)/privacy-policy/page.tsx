@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>登录密码：经 bcrypt 哈希处理后仅以环境变量形式存储于服务端，不以明文形式保存</span>
+                <span>登录密码：由身份认证服务（Supabase Auth）以业界标准的加盐哈希形式加密存储，不以明文形式保存</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
@@ -88,7 +88,7 @@ export default function PrivacyPolicyPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>我们没有任何中心服务器存储您的个人内容数据</span>
+                <span>登录云同步时，您的内容会加密传输并同步至 Supabase 云数据库（新加坡区域），用于跨设备访问；数据库启用行级安全策略（RLS），任何用户只能读写自己的数据</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
@@ -134,15 +134,15 @@ export default function PrivacyPolicyPage() {
             <ul className="space-y-2 list-none pl-0">
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>MindOS 采用单密码认证机制，密码经 bcrypt 哈希后仅存于服务端环境变量，不以明文形式保存</span>
+                <span>MindOS 采用邮箱 + 密码注册登录，密码由身份认证服务（Supabase Auth）以加盐哈希形式加密存储，不以明文形式保存</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>登录成功后，服务端通过 iron-session 生成加密 Cookie（mindos-session）进行会话维持，不使用任何第三方身份认证服务</span>
+                <span>登录成功后，通过加密签名的会话令牌（JWT）维持登录状态，令牌存于浏览器 Cookie 并仅在 HTTPS 下传输</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>移动端 APP 会话有效期为 30 天，浏览器端会话在关闭浏览器后失效</span>
+                <span>连续多次输错密码将触发临时锁定；会话令牌定期自动轮换续期</span>
               </li>
             </ul>
           </section>

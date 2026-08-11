@@ -60,9 +60,11 @@ export async function POST(req: NextRequest) {
         'Connection': 'keep-alive',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
+    // 错误详情仅记录服务端日志，不外泄给前端
+    console.error('[mirror/chat] AI 服务调用失败:', error);
     return NextResponse.json(
-      { error: error.message || 'AI 服务调用失败' },
+      { error: 'AI 服务暂时不可用，请稍后重试' },
       { status: 500 }
     );
   }
