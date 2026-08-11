@@ -219,14 +219,19 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
               setStreamText(fullText);
             } else if (data.type === 'done') {
               if (data.content) fullText = data.content;
+            } else if (data.type === 'error') {
+              throw new Error(data.content || 'AI 服务暂时不可用');
             }
-          } catch {
-            // Ignore parse errors
+          } catch (parseErr) {
+            // JSON.parse 失败忽略；网关 error 帧抛出的错误需向上传递
+            if (!(parseErr instanceof SyntaxError)) {
+              throw parseErr;
+            }
           }
         }
       }
 
-      // Handle remaining buffer
+      // Handle remaining buffer（跳过心跳帧 `: keep-alive`）
       if (buffer.trim().startsWith('data: ')) {
         try {
           const data = JSON.parse(buffer.trim().slice(6));
@@ -235,9 +240,15 @@ export function ModuleMirror({ sessionId, onSessionCreated, initialQuestion }: M
             setStreamText(fullText);
           } else if (data.type === 'done') {
             if (data.content) fullText = data.content;
+          } else if (data.type === 'error') {
+            throw new Error(data.content || 'AI 服务暂时不可用');
           }
-        } catch {
-          // Ignore
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) {
+            // JSON.parse 失败：忽略
+          } else {
+            throw parseErr;
+          }
         }
       }
 

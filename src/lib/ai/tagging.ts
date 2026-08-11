@@ -5,8 +5,8 @@ import { listItems, updateItem, addLink, getTaggingContext } from '@/lib/storage
 // 服务端已改为非流式 JSON 响应：{ ok: true, result: string }
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** 请求 AI JSON 端点，返回原始 AI 文本；失败返回 null */
-async function requestAIText(url: string, body: unknown): Promise<string | null> {
+/** 请求 AI JSON 端点，返回原始 AI 文本；失败返回 null（供各客户端复用） */
+export async function requestAIText(url: string, body: unknown): Promise<string | null> {
   try {
     const res = await fetch(url, {
       method: 'POST',

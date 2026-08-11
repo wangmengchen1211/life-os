@@ -128,64 +128,24 @@ async function triggerBackgroundAnalysis(itemId: number, content: string, title?
     // 获取失败时使用空数组，不影响主流程
   }
 
-  // Call AI analysis
+  // Call AI analysis（非流式 JSON 响应，解析失败自动重试一次）
   try {
-    const res = await fetch('/api/knowledge/tag', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: analysisContent,
-        title: analysisTitle,
-        imageBase64: imageBase64 || undefined,
-        existingTags,
-        categories,
-      }),
-    });
+    const { requestAIText } = await import('@/lib/ai/tagging');
+    const tagBody = {
+      content: analysisContent,
+      title: analysisTitle,
+      imageBase64: imageBase64 || undefined,
+      existingTags,
+      categories,
+    };
 
-    if (!res.ok || !res.body) {
-      console.error(`[AI分析] 请求失败: ${res.status} ${res.statusText}, itemId: ${itemId}`);
-      return;
+    let raw = await requestAIText('/api/knowledge/tag', tagBody);
+    let result = raw ? extractJSON(raw) : null;
+    if (!result) {
+      const retryRaw = await requestAIText('/api/knowledge/tag', tagBody);
+      result = retryRaw ? extractJSON(retryRaw) : null;
     }
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let fullText = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const events = buffer.split('\n\n');
-      buffer = events.pop() || '';
-
-      for (const event of events) {
-        const line = event.trim();
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const data = JSON.parse(line.slice(6));
-          if (data.type === 'text') fullText += data.content;
-          else if (data.type === 'done') fullText = data.content;
-          else if (data.type === 'error') return;
-        } catch (parseErr) {
-          console.warn(`[AI分析] SSE解析错误:`, parseErr);
-        }
-      }
-    }
-
-    // Handle remaining buffer
-    if (buffer.trim().startsWith('data: ')) {
-      try {
-        const data = JSON.parse(buffer.trim().slice(6));
-        if (data.type === 'text') fullText += data.content;
-        else if (data.type === 'done') fullText = data.content;
-      } catch {
-        // Ignore
-      }
-    }
-
-    const result = extractJSON(fullText);
     if (result) {
       await updateItem(itemId, {
         title: result.title || analysisTitle || undefined,
@@ -197,7 +157,7 @@ async function triggerBackgroundAnalysis(itemId: number, content: string, title?
       // Trigger link analysis after tags are done
       triggerLinkAnalysis(itemId, result.title || analysisTitle, result.summary, result.tags);
     } else {
-      console.error(`[AI分析] 解析AI响应失败, itemId: ${itemId}, response: ${fullText.slice(0, 200)}`);
+      console.error(`[AI分析] 解析AI响应失败, itemId: ${itemId}, response: ${(raw || '').slice(0, 200)}`);
     }
   } catch (err) {
     console.error(`[AI分析] 异常: ${err instanceof Error ? err.message : String(err)}, itemId: ${itemId}`);
@@ -226,56 +186,20 @@ async function triggerLinkAnalysis(
     // Limit to 30 items for AI (avoid token explosion)
     const itemsForAI = existingItems.slice(0, 30);
 
-    const res = await fetch('/api/knowledge/link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        newItem: { title: title || '未命名', summary, tags },
-        existingItems: itemsForAI,
-      }),
-    });
+    const { requestAIText } = await import('@/lib/ai/tagging');
+    const linkBody = {
+      newItem: { title: title || '未命名', summary, tags },
+      existingItems: itemsForAI,
+    };
 
-    if (!res.ok || !res.body) return;
-
-    // SSE stream parsing
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let fullText = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const events = buffer.split('\n\n');
-      buffer = events.pop() || '';
-
-      for (const event of events) {
-        const line = event.trim();
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const data = JSON.parse(line.slice(6));
-          if (data.type === 'text') fullText += data.content;
-          else if (data.type === 'done') fullText = data.content;
-        } catch {
-          // Ignore parse errors
-        }
-      }
+    let raw = await requestAIText('/api/knowledge/link', linkBody);
+    let result = raw ? (extractJSON(raw) as any) : null;
+    // JSON 解析失败自动重试一次
+    if (!result) {
+      const retryRaw = await requestAIText('/api/knowledge/link', linkBody);
+      result = retryRaw ? (extractJSON(retryRaw) as any) : null;
     }
 
-    // Handle remaining buffer
-    if (buffer.trim().startsWith('data: ')) {
-      try {
-        const data = JSON.parse(buffer.trim().slice(6));
-        if (data.type === 'text') fullText += data.content;
-        else if (data.type === 'done') fullText = data.content;
-      } catch {
-        // Ignore
-      }
-    }
-
-    const result = extractJSON(fullText) as any;
     if (result && Array.isArray(result.links)) {
       for (const link of result.links) {
         if (link.id && typeof link.id === 'number') {
