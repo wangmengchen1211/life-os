@@ -103,6 +103,8 @@ export async function isMigrated(module: string): Promise<boolean> {
 export const LOCAL_UPSERT_EVENT = 'mindos:local-upsert';
 export const LOCAL_DELETE_EVENT = 'mindos:local-delete';
 export const FULL_SYNC_EVENT = 'mindos:full-sync';
+/** 全量同步完成事件（页面可监听此事件刷新 UI） */
+export const SYNC_COMPLETE_EVENT = 'mindos:sync-complete';
 
 /** 本地新增/更新后通知同步层（fire-and-forget，不阻塞 UI） */
 export function notifyUpsert(table: string, localId: number): void {

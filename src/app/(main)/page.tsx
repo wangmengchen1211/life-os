@@ -7,6 +7,7 @@ import { getTimeTheme, getGreeting, type Greeting } from '@/lib/utils/time-theme
 import { getStats } from '@/lib/storage/knowledge-store';
 import { getWeekCount } from '@/lib/storage/diary-store';
 import { getTodayStats } from '@/lib/storage/todo-store';
+import { SYNC_COMPLETE_EVENT } from '@/lib/sync/cloud';
 import { PenLine, Brain, CheckSquare, Sparkles, Disc, CircleUserRound, ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
@@ -66,6 +67,8 @@ export default function DashboardPage() {
   const [generateType, setGenerateType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [isGenerating, setIsGenerating] = useState(false);
   const [mindlogKey, setMindlogKey] = useState(0);
+  // 云同步完成后递增，强制子组件重新 mount 以读取最新数据
+  const [syncVersion, setSyncVersion] = useState(0);
 
   function handleMindlogGenerate(type: 'daily' | 'weekly' | 'monthly' = 'daily') {
     setGenerateType(type);
@@ -117,6 +120,16 @@ export default function DashboardPage() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [refreshDashboardStats]);
 
+  // 云同步完成 → 强制刷新统计数据 + 子组件重新 mount 读取最新数据
+  useEffect(() => {
+    const handleSyncComplete = () => {
+      refreshDashboardStats();
+      setSyncVersion((k) => k + 1);
+    };
+    window.addEventListener(SYNC_COMPLETE_EVENT, handleSyncComplete);
+    return () => window.removeEventListener(SYNC_COMPLETE_EVENT, handleSyncComplete);
+  }, [refreshDashboardStats]);
+
   const navItems: NavItem[] = [
     {
       id: 'diary',
@@ -153,7 +166,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="h-[100dvh] overflow-y-auto md:overflow-hidden flex flex-col relative">
+    <div key={syncVersion} className="h-[100dvh] overflow-y-auto md:overflow-hidden flex flex-col relative">
       {/* 主内容区 — 桌面单屏布局不允许滚动；移动端允许纵向滚动保证内容完整展开 */}
       <div className="flex-1 flex flex-col px-4 sm:px-6 pt-10 md:pt-12 pb-6 max-w-[800px] w-full mx-auto min-h-0 justify-center">
         {/* 顶部：品牌 + 时间 + 问候 */}

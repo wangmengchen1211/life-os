@@ -5,6 +5,7 @@ import {
   mergeModule,
   pushOne,
   markMigrated,
+  SYNC_COMPLETE_EVENT,
   type MergeAdapter,
   type MergeContext,
   type CloudRow,
@@ -636,6 +637,11 @@ export async function syncAllModules(): Promise<FullSyncResult> {
     await syncProfile();
   } catch (e) {
     console.warn('[sync] profile 同步失败:', e);
+  }
+
+  // 通知页面：全量同步已完成，可刷新 UI 展示最新数据
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(SYNC_COMPLETE_EVENT));
   }
 
   return results;
