@@ -3,11 +3,16 @@ import { useState, useEffect } from 'react';
 import { listEntries } from '@/lib/storage/diary-store';
 import { motion } from 'framer-motion';
 
-// 今日回响：把今日日记内容交给 AI，按严格规则精选一句原话。
-// 为节省费用，同一天 + 同一份内容只调一次 AI，结果缓存在 localStorage。
+// 今日回响：把今日日记内容交给 AI 精选一句值得回响的原话。
+// 同一天 + 同一份内容只调一次 AI，结果缓存在 localStorage。
+// 注意：兜底语不缓存，确保下次可以重新请求 AI。
 // cache key: daily-echo:<YYYY-MM-DD>:<contentHash>
 
-const FALLBACK_QUIET = '今天的文字是平静的——也许有些感触正在水面下酝酿';
+const FALLBACK_PHRASES = [
+  '今天的文字是平静的——也许有些感触正在水面下酝酿',
+  '今天的你，安静地存在着，这已经足够',
+  '不表达也是一种表达',
+];
 
 function simpleHash(s: string): string {
   let h = 0;
@@ -50,10 +55,10 @@ export function DailyEcho() {
         const contentHash = simpleHash(diaries.join('\n\n'));
         const cacheKey = `daily-echo:${today}:${contentHash}`;
 
-        // 命中缓存直接显示
+        // 命中缓存（且不是兜底语）直接显示
         try {
           const cached = localStorage.getItem(cacheKey);
-          if (cached) {
+          if (cached && !FALLBACK_PHRASES.includes(cached)) {
             if (!cancelled) setQuote(cached);
             return;
           }
@@ -61,7 +66,7 @@ export function DailyEcho() {
           // localStorage 不可用时忽略
         }
 
-        // 未命中 → 调 AI
+        // 未命中或缓存的是兜底语 → 调 AI
         const resp = await fetch('/api/daily-echo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -69,22 +74,25 @@ export function DailyEcho() {
         });
 
         if (!resp.ok) {
-          if (!cancelled) setQuote(FALLBACK_QUIET);
+          if (!cancelled) setQuote(FALLBACK_PHRASES[0]);
           return;
         }
 
         const data = (await resp.json()) as { echo?: string };
-        const echo = (data.echo || '').trim() || FALLBACK_QUIET;
+        const echo = (data.echo || '').trim() || FALLBACK_PHRASES[0];
 
-        try {
-          localStorage.setItem(cacheKey, echo);
-        } catch {
-          // 忽略写缓存失败
+        // 兜底语不缓存，下次重新请求
+        if (!FALLBACK_PHRASES.includes(echo)) {
+          try {
+            localStorage.setItem(cacheKey, echo);
+          } catch {
+            // 忽略写缓存失败
+          }
         }
 
         if (!cancelled) setQuote(echo);
       } catch {
-        if (!cancelled) setQuote(FALLBACK_QUIET);
+        if (!cancelled) setQuote(FALLBACK_PHRASES[0]);
       }
     }
 
