@@ -63,7 +63,6 @@ export async function middleware(request: NextRequest) {
     '/manifest',
     '/sw.js',
     '/workbox-',
-    '/api/debug-ai', // 临时调试端点，验证后删除
   ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 

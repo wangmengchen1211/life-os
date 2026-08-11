@@ -59,24 +59,24 @@ function extractJSON(text: string): AnalysisResult | null {
 
 function detectType(text: string, hasImage: boolean): 'link' | 'text' | 'file' {
   if (hasImage) return 'file';
-  
+
   const urlPattern = /https?:\/\/[^\s]+/gi;
   const urls = text.match(urlPattern) || [];
-  
+
   if (urls.length === 0) return 'text';
-  
+
   // 计算 URL 与纯文本的比重
   const urlTotalLength = urls.reduce((sum, url) => sum + url.length, 0);
   const cleanText = text.replace(urlPattern, '').trim();
   const textLength = cleanText.length;
-  
+
   // 纯URL
   if (textLength === 0) return 'link';
-  
+
   // URL占比高，或者文本部分很短（仅是标题）
   const urlRatio = urlTotalLength / (urlTotalLength + textLength);
   const isTitleOnlyFormat = textLength < 100 && urls.length >= 1;
-  
+
   return (urlRatio >= 0.5 || isTitleOnlyFormat) ? 'link' : 'text';
 }
 

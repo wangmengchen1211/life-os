@@ -11,7 +11,7 @@ const FIRST_TOKEN_TIMEOUT_MS = 20_000; // 建流（首 token）超时 → 触发
 const REQUEST_TIMEOUT_MS = 30_000; // 单通道请求超时
 const HEARTBEAT_INTERVAL_MS = 10_000; // SSE 心跳间隔
 
-const TEXT_MODEL_PRIMARY = process.env.AI_TEXT_MODEL_PRIMARY || 'deepseek-chat';
+const TEXT_MODEL_PRIMARY = process.env.AI_TEXT_MODEL_PRIMARY || 'deepseek-v4-pro';
 const TEXT_MODEL_FALLBACK = process.env.AI_TEXT_MODEL_FALLBACK || 'qwen3.7-max';
 const JSON_MODEL_PRIMARY = process.env.AI_JSON_MODEL_PRIMARY || 'deepseek-chat';
 const JSON_MODEL_FALLBACK = process.env.AI_JSON_MODEL_FALLBACK || 'qwen-turbo';
@@ -23,7 +23,8 @@ let _qwen: OpenAI | null = null;
 function getDeepSeek(): OpenAI {
   if (!_deepseek) {
     _deepseek = new OpenAI({
-      baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
+      // trim 防止 Vercel 环境变量末尾空格导致 URL 无效
+      baseURL: (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').trim(),
       apiKey: process.env.DEEPSEEK_API_KEY || 'placeholder',
       timeout: REQUEST_TIMEOUT_MS,
     });
@@ -34,7 +35,7 @@ function getDeepSeek(): OpenAI {
 function getQwen(): OpenAI {
   if (!_qwen) {
     _qwen = new OpenAI({
-      baseURL: process.env.ANTHROPIC_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      baseURL: (process.env.ANTHROPIC_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1').trim(),
       apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder',
       timeout: REQUEST_TIMEOUT_MS,
     });
