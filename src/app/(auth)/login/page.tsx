@@ -80,7 +80,11 @@ function LoginContent() {
           return;
         }
       } else {
-        // 注册
+        // 注册：前端先校验密码强度（与 Supabase 密码策略 ≥8 位对齐）
+        if (password.length < 8) {
+          setError('密码至少 8 位，请设置更强的密码');
+          return;
+        }
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -160,10 +164,10 @@ function LoginContent() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="密码（至少6位）"
+            placeholder={mode === 'signup' ? '密码（至少8位）' : '密码'}
             className="w-full px-5 py-3.5 rounded-2xl border border-white/60 text-center placeholder:text-gray-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-300/30 backdrop-blur-xl"
             style={{ background: 'var(--card-bg)', color: 'var(--text-primary)' }}
-            minLength={6}
+            minLength={mode === 'signup' ? 8 : undefined}
             required
           />
 
