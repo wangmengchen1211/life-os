@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { streamChatDeepSeek } from '@/lib/ai/providers/deepseek';
+import { streamChatWithFallback } from '@/lib/ai/gateway';
 import {
   buildDailyMindlogPrompt,
   buildWeeklyMindlogPrompt,
@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const stream = await streamChatDeepSeek(prompt.system, prompt.user);
+    // 双通道容灾（DeepSeek 主力 + 千问兜底）+ SSE 心跳防断连
+    const stream = streamChatWithFallback(prompt.system, prompt.user);
 
     return new Response(stream, {
       headers: {

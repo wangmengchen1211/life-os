@@ -24,7 +24,7 @@ const MOOD_OPTIONS = ['开心', '平静', '疲惫', '焦虑', '感恩', '难过'
 
 // ─── Background AI Feedback (independent of component lifecycle) ─────────────
 
-async function triggerDiaryFeedback(entryId: number, content: string, moodTags: string[]) {
+async function fetchDiaryFeedback(content: string, moodTags: string[]): Promise<any | null> {
   try {
     const res = await fetch('/api/diary/feedback', {
       method: 'POST',
@@ -32,13 +32,25 @@ async function triggerDiaryFeedback(entryId: number, content: string, moodTags: 
       body: JSON.stringify({ content, moodTags }),
     });
 
-    if (!res.ok || !res.body) return;
+    if (!res.ok || !res.body) return null;
 
     // SSE 流解析
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
     let fullText = '';
+    let streamError = false;
+
+    const handleEvent = (raw: string) => {
+      const line = raw.trim();
+      if (!line.startsWith('data: ')) return;
+      try {
+        const data = JSON.parse(line.slice(6));
+        if (data.type === 'text') fullText += data.content;
+        else if (data.type === 'done') fullText = data.content;
+        else if (data.type === 'error') streamError = true;
+      } catch {}
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -46,38 +58,34 @@ async function triggerDiaryFeedback(entryId: number, content: string, moodTags: 
       buffer += decoder.decode(value, { stream: true });
       const events = buffer.split('\n\n');
       buffer = events.pop() || '';
-      for (const event of events) {
-        const line = event.trim();
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const data = JSON.parse(line.slice(6));
-          if (data.type === 'text') fullText += data.content;
-          else if (data.type === 'done') fullText = data.content;
-        } catch {}
-      }
+      for (const event of events) handleEvent(event);
     }
 
-    // 处理残留 buffer
-    if (buffer.trim().startsWith('data: ')) {
-      try {
-        const data = JSON.parse(buffer.trim().slice(6));
-        if (data.type === 'text') fullText += data.content;
-        else if (data.type === 'done') fullText = data.content;
-      } catch {}
-    }
+    // 处理残留 buffer（跳过心跳帧 `: keep-alive`）
+    if (buffer.trim().startsWith('data: ')) handleEvent(buffer);
 
-    // 解析 JSON 并更新 IndexedDB
-    const result = extractJSON(fullText);
-    if (result) {
-      const { updateEntry } = await import('@/lib/storage/diary-store');
-      await updateEntry(entryId, {
-        aiFeedback: result.feedback || '',
-        moodTags: result.moodTags || moodTags,
-        keyThemes: result.keyThemes || [],
-      });
-    }
+    if (streamError) return null;
+    return extractJSON(fullText);
   } catch (err) {
     console.warn('AI反馈获取失败:', err);
+    return null;
+  }
+}
+
+async function triggerDiaryFeedback(entryId: number, content: string, moodTags: string[]) {
+  // 失败（网络/双通道全挂/JSON 解析失败）自动重试一次
+  let result = await fetchDiaryFeedback(content, moodTags);
+  if (!result || !result.feedback) {
+    result = await fetchDiaryFeedback(content, moodTags);
+  }
+
+  if (result && result.feedback) {
+    const { updateEntry } = await import('@/lib/storage/diary-store');
+    await updateEntry(entryId, {
+      aiFeedback: result.feedback,
+      moodTags: result.moodTags || moodTags,
+      keyThemes: result.keyThemes || [],
+    }).catch(() => {});
   }
 }
 

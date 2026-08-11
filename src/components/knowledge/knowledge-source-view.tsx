@@ -348,7 +348,7 @@ export default function KnowledgeSourceView({ onSelectItem }: KnowledgeSourceVie
       <EmptyState
         icon={<Layers size={48} strokeWidth={1} />}
         title="暂无来源数据"
-        description="导入飞书或 Obsidian 内容后，这里将按来源分组展示"
+        description="导入 Obsidian 内容后，这里将按来源分组展示"
       />
     );
   }

@@ -57,11 +57,11 @@ export default function PrivacyPolicyPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>您导入的内容：飞书文档、Obsidian 笔记、微信公众号文章链接</span>
+                <span>您导入的内容：Obsidian 笔记、微信公众号文章链接</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>您上传的图片：仅用于本地 OCR 文字识别，识别在您的设备或应用服务器上完成，图片原始数据不传输至任何外部服务，识别后不保留</span>
+                <span>您上传的图片：用于 AI 图片理解（生成摘要与标签），图片会发送至 AI 视觉模型进行处理，处理完成后我们不额外留存图片副本</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
@@ -109,11 +109,11 @@ export default function PrivacyPolicyPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>当前使用的 AI 服务商：通义千问（经阿里云 DashScope API 调用）</span>
+                <span>当前使用的 AI 服务商：DeepSeek 与通义千问（双通道容灾，后者经阿里云 DashScope API 调用）</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
-                <span>图片文字识别（OCR）：使用 PaddleOCR 在本地进行推理，不将图片发送至任何外部 API</span>
+                <span>图片理解：图片发送至通义千问视觉模型（Qwen-VL，经 DashScope API）进行内容理解，不用于其他用途</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
@@ -153,10 +153,6 @@ export default function PrivacyPolicyPage() {
               五、第三方服务
             </h3>
             <ul className="space-y-2 list-none pl-0">
-              <li className="flex gap-2">
-                <span className="text-gray-300 select-none">•</span>
-                <span>飞书：如您主动授权同步飞书文档，应用通过飞书 OAuth 获取您指定的文档内容，仅作为中间通道拉取，不存储、不分享</span>
-              </li>
               <li className="flex gap-2">
                 <span className="text-gray-300 select-none">•</span>
                 <span>Obsidian：如您导入 Obsidian 笔记，内容仅在本地处理，不传输至任何服务器</span>

@@ -7,7 +7,7 @@
 import { upsertByExternalId, getTaggingContext } from '@/lib/storage/knowledge-store';
 import { parseMarkdown, extractFallbackTitle } from '@/lib/obsidian/markdown-parser';
 import { scanMarkdown, type VaultFile } from '@/lib/obsidian/vault-adapter';
-import { triggerAITagging } from '@/lib/media/sync-service';
+import { triggerAITagging } from '@/lib/ai/tagging';
 import type { ImportProgress, ImportSummary, ProgressHandler } from './types';
 
 export interface ObsidianImportOptions {

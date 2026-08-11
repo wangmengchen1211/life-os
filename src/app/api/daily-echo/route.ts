@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { streamChatDeepSeek } from '@/lib/ai/providers/deepseek';
+import { streamChatWithFallback } from '@/lib/ai/gateway';
 import {
   DAILY_ECHO_SYSTEM_PROMPT,
   buildDailyEchoUserPrompt,
@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
   }
 
   const userPrompt = buildDailyEchoUserPrompt(diaries);
-  const stream = await streamChatDeepSeek(DAILY_ECHO_SYSTEM_PROMPT, userPrompt);
+  // 双通道容灾（DeepSeek 主力 + 千问兜底）+ SSE 心跳防断连
+  const stream = streamChatWithFallback(DAILY_ECHO_SYSTEM_PROMPT, userPrompt);
 
   // 内部把 SSE stream 读完，聚合为最终一句话
   const reader = stream.getReader();

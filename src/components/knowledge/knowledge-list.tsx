@@ -5,7 +5,7 @@ import { Search, Link2, FileText, File, PenTool, Plus, GitBranch, CheckSquare, T
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { listItems, searchItems, listCategories, deleteItem, getItem, getTaggingContext, type KnowledgeItem } from '@/lib/storage/knowledge-store';
-import { triggerAITagging } from '@/lib/media/sync-service';
+import { triggerAITagging } from '@/lib/ai/tagging';
 import { safeText } from '@/lib/utils/safe-text';
 import KnowledgeSourceView from './knowledge-source-view';
 
@@ -28,7 +28,7 @@ interface KnowledgeListProps {
 }
 
 type ViewMode = 'topic' | 'source' | 'time';
-type FilterType = 'all' | 'link' | 'text' | 'file' | 'creation_article' | 'feishu' | 'obsidian';
+type FilterType = 'all' | 'link' | 'text' | 'file' | 'creation_article' | 'obsidian';
 
 const VIEW_TABS: { key: ViewMode; label: string }[] = [
   { key: 'topic', label: '主题' },
@@ -42,7 +42,6 @@ const TYPE_TABS: { key: FilterType; label: string }[] = [
   { key: 'text', label: '文本' },
   { key: 'file', label: '文件' },
   { key: 'creation_article', label: '创作' },
-  { key: 'feishu', label: '飞书' },
   { key: 'obsidian', label: 'Obsidian' },
 ];
 

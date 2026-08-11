@@ -33,7 +33,7 @@ import {
   type KnowledgeLink,
   type RelationType,
 } from '@/lib/storage/knowledge-store';
-import { triggerAITagging } from '@/lib/media/sync-service';
+import { triggerAITagging } from '@/lib/ai/tagging';
 import { safeText } from '@/lib/utils/safe-text';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -258,7 +258,6 @@ export default function KnowledgeDetail({
         // 让用户一眼能看出是数据本身缺失还是格式解析问题。
         setAiError(
           `正文为空或仅含空白（title=${titleText.length} 字 / rawContent=${rawText.length} 字 / 可见字符=${visibleChars}）。` +
-          `若来自飞书 docx，raw_content 接口仅返回纯文本段落，图片/表格/代码块/标题以外的结构块均不会计入。` +
           `请点上方「编辑」手动粘贴正文后重试。`
         );
         return;
@@ -526,7 +525,7 @@ export default function KnowledgeDetail({
                 type="url"
                 value={editSourceUrl}
                 onChange={(e) => setEditSourceUrl(e.target.value)}
-                placeholder="粘贴公众号 / 网页 / 飞书原文链接（可留空）"
+                placeholder="粘贴公众号 / 网页原文链接（可留空）"
                 className="w-full text-xs bg-white/60 rounded-lg px-3 py-1.5 outline-none border border-white/80 focus:border-[var(--accent)] transition-colors"
                 style={{ color: 'var(--text-primary)' }}
               />
@@ -562,7 +561,7 @@ export default function KnowledgeDetail({
                   <div className="flex-1">
                     <h4 className="text-sm font-semibold text-amber-800">正文为空</h4>
                     <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                      飞书导入仅支持纯文本段落，图片/表格/代码块不会导入。请手动粘贴内容后重新解析。
+                      该条目正文未能自动提取。请手动粘贴内容后重新解析。
                     </p>
                     {!isEditingRawContent ? (
                       <button

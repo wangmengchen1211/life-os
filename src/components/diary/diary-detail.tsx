@@ -109,6 +109,8 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
   const [fetchingAI, setFetchingAI] = useState(false);
   // 流式预览（AI 回信逐字出现）
   const [streamingFeedback, setStreamingFeedback] = useState('');
+  // AI 回信失败标记（显示"点击重试"）
+  const [feedbackFailed, setFeedbackFailed] = useState(false);
 
   // ─── Load entry ──────────────────────────────────────────────────────────
 
@@ -192,6 +194,7 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
     if (!entry) return;
     setFetchingAI(true);
     setStreamingFeedback('');
+    setFeedbackFailed(false);
     try {
       const res = await fetch('/api/diary/feedback', {
         method: 'POST',
@@ -200,6 +203,7 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
       });
 
       if (!res.ok || !res.body) {
+        setFeedbackFailed(true);
         setFetchingAI(false);
         return;
       }
@@ -208,6 +212,24 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
       const decoder = new TextDecoder();
       let buffer = '';
       let fullText = '';
+      let streamError = false;
+
+      const handleEvent = (raw: string) => {
+        const line = raw.trim();
+        if (!line.startsWith('data: ')) return;
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.type === 'text') {
+            fullText += data.content;
+            // 流式渲染：增量提取 feedback 字段，实现打字机效果
+            setStreamingFeedback(extractFeedbackPreview(fullText));
+          } else if (data.type === 'done') {
+            fullText = data.content;
+          } else if (data.type === 'error') {
+            streamError = true;
+          }
+        } catch {}
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -215,47 +237,33 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split('\n\n');
         buffer = events.pop() || '';
-        for (const event of events) {
-          const line = event.trim();
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.type === 'text') {
-              fullText += data.content;
-              // 流式渲染：增量提取 feedback 字段，实现打字机效果
-              setStreamingFeedback(extractFeedbackPreview(fullText));
-            } else if (data.type === 'done') {
-              fullText = data.content;
-            }
-          } catch {}
-        }
+        for (const event of events) handleEvent(event);
       }
 
-      // Process remaining buffer
-      if (buffer.trim().startsWith('data: ')) {
-        try {
-          const data = JSON.parse(buffer.trim().slice(6));
-          if (data.type === 'text') {
-            fullText += data.content;
-            setStreamingFeedback(extractFeedbackPreview(fullText));
-          } else if (data.type === 'done') {
-            fullText = data.content;
-          }
-        } catch {}
+      // Process remaining buffer（跳过心跳帧 `: keep-alive`）
+      if (buffer.trim().startsWith('data: ')) handleEvent(buffer);
+
+      if (streamError) {
+        setFeedbackFailed(true);
+        return;
       }
 
       const result = extractJSON(fullText);
-      if (result) {
+      if (result && result.feedback) {
         const updates: Partial<DiaryEntry> = {
-          aiFeedback: result.feedback || '',
+          aiFeedback: result.feedback,
           moodTags: result.moodTags || entry.moodTags,
           keyThemes: result.keyThemes || [],
         };
         await updateEntry(entryId, updates);
         setEntry({ ...entry, ...updates });
+      } else {
+        // JSON 解析失败：标记失败，允许用户点击重试
+        setFeedbackFailed(true);
       }
     } catch (err) {
       console.error('Failed to fetch AI feedback:', err);
+      setFeedbackFailed(true);
     } finally {
       setFetchingAI(false);
       setStreamingFeedback('');
@@ -602,6 +610,17 @@ export default function DiaryDetail({ entryId, onBack, onDeleted }: DiaryDetailP
               </div>
             )}
           </>
+        ) : feedbackFailed ? (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-red-400">回信获取失败</span>
+            <button
+              onClick={refetchAIFeedback}
+              className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>点击重试</span>
+            </button>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <button

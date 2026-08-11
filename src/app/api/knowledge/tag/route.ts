@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { streamChat } from '@/lib/ai/service';
+import { chatJSONWithFallback, chatVisionJSON } from '@/lib/ai/gateway';
 import {
   KNOWLEDGE_TAGGING_SYSTEM_PROMPT,
   buildKnowledgeTaggingUserPrompt,
@@ -28,47 +28,40 @@ export async function POST(req: NextRequest) {
   const safeExistingTags: string[] = existingTags || [];
   const safeCategories: string[] = categories || [];
 
-  let userContent: string;
-
-  if (imageBase64) {
-    // 图片：动态加载 OCR 模块（避免原生绑定在 Windows 上崩溃）
-    let ocrText = '';
-    try {
-      const { extractTextFromImage } = await import('@/lib/ai/ocr');
-      ocrText = await extractTextFromImage(imageBase64);
-    } catch (e) {
-      console.warn('[knowledge-tag] OCR unavailable:', (e as Error).message);
-    }
-    const combinedContent = ocrText
-      ? (content ? `${content}\n\n[图片文字]\n${ocrText}` : ocrText)
-      : (content || '请分析这张图片的内容');
-    userContent = buildKnowledgeTaggingUserPrompt({
-      content: combinedContent,
-      title,
-      existingTags: safeExistingTags,
-      categories: safeCategories,
-    });
-  } else {
-    userContent = buildKnowledgeTaggingUserPrompt({
-      content,
-      title,
-      existingTags: safeExistingTags,
-      categories: safeCategories,
-    });
-  }
-
   try {
-    const stream = await streamChat(KNOWLEDGE_TAGGING_SYSTEM_PROMPT, userContent);
+    let result: { ok: boolean; text: string };
 
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    if (imageBase64) {
+      // 图片：千问 VL 视觉模型直接理解图片内容并打标
+      const userPrompt = buildKnowledgeTaggingUserPrompt({
+        content: content || '请分析这张图片的内容',
+        title,
+        existingTags: safeExistingTags,
+        categories: safeCategories,
+      });
+      result = await chatVisionJSON(KNOWLEDGE_TAGGING_SYSTEM_PROMPT, [
+        { type: 'text', text: userPrompt },
+        { type: 'image', imageUrl: imageBase64 },
+      ]);
+    } else {
+      // 文本：双通道容灾 + 强制 JSON 输出（快速模型，秒级返回）
+      const userPrompt = buildKnowledgeTaggingUserPrompt({
+        content,
+        title,
+        existingTags: safeExistingTags,
+        categories: safeCategories,
+      });
+      result = await chatJSONWithFallback(KNOWLEDGE_TAGGING_SYSTEM_PROMPT, userPrompt);
+    }
+
+    if (!result.ok || !result.text.trim()) {
+      return NextResponse.json({ error: 'AI服务异常' }, { status: 502 });
+    }
+
+    // 非流式 JSON 响应：原始文本由客户端容错解析（extractJSON）
+    return NextResponse.json({ ok: true, result: result.text });
   } catch (error) {
-    console.error('[AI Tag] streamChat error:', error);
+    console.error('[AI Tag] error:', error);
     return NextResponse.json({ error: 'AI服务异常' }, { status: 500 });
   }
 }

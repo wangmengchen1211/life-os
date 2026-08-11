@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { streamChatDeepSeek } from '@/lib/ai/providers/deepseek';
+import { streamChatWithFallback, streamVisionChat } from '@/lib/ai/gateway';
 import { MIRROR_SYSTEM_PROMPT } from '@/lib/ai/prompts/mirror-insight';
 
 export const runtime = 'nodejs';
@@ -31,26 +31,13 @@ export async function POST(req: NextRequest) {
     }
     userContent += `用户当前消息：${message || '请看图片'}`;
 
-    // 选择模型并调用
-    let stream: ReadableStream;
-
-    if (imageBase64) {
-      // 含图片：动态加载 OCR 模块（避免原生绑定在 Windows 上崩溃）
-      let ocrText = '';
-      try {
-        const { extractTextFromImage } = await import('@/lib/ai/ocr');
-        ocrText = await extractTextFromImage(imageBase64);
-      } catch (e) {
-        console.warn('[mirror] OCR unavailable, proceeding without image text:', (e as Error).message);
-      }
-      const combinedContent = ocrText
-        ? `${userContent}\n\n[图片文字]\n${ocrText}`
-        : userContent;
-      stream = await streamChatDeepSeek(systemPrompt, combinedContent);
-    } else {
-      // 纯文本：使用 DeepSeek
-      stream = await streamChatDeepSeek(systemPrompt, userContent);
-    }
+    // 双通道容灾网关：含图片走千问 VL 视觉模型直接理解图片，纯文本走 DeepSeek/千问
+    const stream = imageBase64
+      ? streamVisionChat(systemPrompt, [
+          { type: 'text', text: userContent },
+          { type: 'image', imageUrl: imageBase64 },
+        ])
+      : streamChatWithFallback(systemPrompt, userContent);
 
     // 返回 SSE 流
     return new Response(stream, {

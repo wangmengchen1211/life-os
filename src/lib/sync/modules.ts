@@ -33,11 +33,6 @@ import {
   type MirrorMessage,
 } from '@/lib/storage/mirror-store';
 import {
-  initDB as initMediaDB,
-  type MediaConfig,
-  type SyncLog,
-} from '@/lib/storage/media-store';
-import {
   initDB as initProfileDB,
   getUserProfile,
   type UserProfile,
@@ -422,68 +417,6 @@ const mirrorMessagesAdapter = makeAdapter<MirrorMessage>(initMirrorDB, 'messages
   withCloudId,
 });
 
-// ─── 7. 媒体订阅 ────────────────────────────────────────────────────────────
-
-const mediaConfigsAdapter = makeAdapter<MediaConfig>(initMediaDB, 'configs', {
-  table: 'media_configs',
-  module: 'media',
-  toPayload(local, ctx) {
-    return {
-      user_id: ctx.userId,
-      platform: local.platform,
-      rss_url: local.rssUrl,
-      nickname: local.nickname,
-      last_sync_at: local.lastSyncAt ?? null,
-      last_sync_status: local.lastSyncStatus ?? null,
-      created_at: local.createdAt,
-    };
-  },
-  toLocal(row) {
-    return {
-      platform: row.platform as MediaConfig['platform'],
-      rssUrl: row.rss_url as string,
-      nickname: row.nickname as string,
-      lastSyncAt: row.last_sync_at as string | undefined,
-      lastSyncStatus: row.last_sync_status as 'success' | 'fail' | undefined,
-      createdAt: row.created_at as string,
-    };
-  },
-  localTimestamp: (l) => l.createdAt,
-  rowTimestamp: (r) => r.created_at as string,
-  cloudIdOf,
-  withCloudId,
-});
-
-const mediaSyncLogsAdapter = makeAdapter<SyncLog>(initMediaDB, 'sync_logs', {
-  table: 'media_sync_logs',
-  module: 'media',
-  toPayload(local, ctx) {
-    const configUuid = ctx.idMap.get(local.configId);
-    return {
-      user_id: ctx.userId,
-      config_id: configUuid ?? null,
-      status: local.status,
-      items_count: local.itemsCount,
-      error_msg: local.errorMsg ?? null,
-      sync_at: local.syncAt,
-    };
-  },
-  toLocal(row, ctx) {
-    const configUuid = row.config_id as string | null;
-    return {
-      configId: configUuid ? ctx.reverseIdMap.get(configUuid) ?? -1 : -1,
-      status: row.status as 'success' | 'fail',
-      itemsCount: row.items_count as number,
-      errorMsg: row.error_msg as string | undefined,
-      syncAt: row.sync_at as string,
-    };
-  },
-  localTimestamp: (l) => l.syncAt,
-  rowTimestamp: (r) => r.sync_at as string,
-  cloudIdOf,
-  withCloudId,
-});
-
 // ─── 注册表 ─────────────────────────────────────────────────────────────────
 
 /** 全部分表按依赖顺序排列（主表在前，子表在后） */
@@ -498,8 +431,6 @@ export const ADAPTER_ORDER: MergeAdapter<any>[] = [
   lettersAdapter,
   mirrorSessionsAdapter,
   mirrorMessagesAdapter,
-  mediaConfigsAdapter,
-  mediaSyncLogsAdapter,
 ];
 
 const ADAPTER_BY_TABLE = new Map(
@@ -507,7 +438,7 @@ const ADAPTER_BY_TABLE = new Map(
 );
 
 /** 子表：变更时走全量合并（需要父表 id 映射），主表走单条推送 */
-const CHILD_TABLES = new Set(['knowledge_links', 'mirror_messages', 'media_sync_logs']);
+const CHILD_TABLES = new Set(['knowledge_links', 'mirror_messages']);
 
 /** 构建本地 id → 云端 uuid 映射（供子表引用父表时使用） */
 async function buildIdMap(userId: string): Promise<MergeContext> {

@@ -54,7 +54,6 @@
     "onnxruntime-node": "^1.26.0",
     "openai": "^6.37.0",
     "postgres": "^3.4.9",
-    "ppu-paddle-ocr": "^5.4.4",
     "puppeteer": "^24.43.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

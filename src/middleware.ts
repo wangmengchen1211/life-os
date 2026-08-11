@@ -57,7 +57,6 @@ export async function middleware(request: NextRequest) {
   const publicPaths = [
     '/login',
     '/privacy-policy',
-    '/api/feishu/oauth/callback',
     '/_next',
     '/favicon.ico',
     '/icons',
