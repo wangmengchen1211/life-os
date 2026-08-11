@@ -10,6 +10,7 @@ import {
   getTodosByDate,
   toggleComplete,
   deleteTodo,
+  updateTodo,
   type Todo,
 } from '@/lib/storage/todo-store';
 
@@ -147,6 +148,11 @@ export function TodoList() {
     await loadTodos();
   }
 
+  async function handleUpdate(id: number, updates: { title?: string; date?: string }) {
+    await updateTodo(id, updates);
+    await loadTodos();
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -251,9 +257,11 @@ export function TodoList() {
                     batchMode && todo.id != null && selectedIds.has(todo.id) ? 'ring-2 ring-teal-400/60 rounded-xl bg-teal-50/30' : ''
                   }`}>
                     <TodoItem
-                      todo={{ id: todo.id!, title: todo.title, isCompleted: todo.isCompleted, completedAt: todo.completedAt }}
+                      todo={{ id: todo.id!, title: todo.title, date: todo.date, isCompleted: todo.isCompleted, completedAt: todo.completedAt }}
                       onToggle={handleToggle}
                       onDelete={handleDelete}
+                      onUpdate={handleUpdate}
+                      disabled={batchMode}
                     />
                   </div>
                 </div>
@@ -291,9 +299,11 @@ export function TodoList() {
                         batchMode && todo.id != null && selectedIds.has(todo.id) ? 'ring-2 ring-teal-400/60 rounded-xl bg-teal-50/30' : ''
                       }`}>
                         <TodoItem
-                          todo={{ id: todo.id!, title: todo.title, isCompleted: todo.isCompleted, completedAt: todo.completedAt }}
+                          todo={{ id: todo.id!, title: todo.title, date: todo.date, isCompleted: todo.isCompleted, completedAt: todo.completedAt }}
                           onToggle={handleToggle}
                           onDelete={handleDelete}
+                          onUpdate={handleUpdate}
+                          disabled={batchMode}
                         />
                       </div>
                     </div>
