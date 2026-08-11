@@ -2,16 +2,16 @@ import OpenAI from 'openai';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AI 双通道容灾网关
-// - 主通道 DeepSeek，失败/超时自动切换千问（DashScope）兜底
+// - 主通道 DeepSeek，失败/超时/空内容自动切换千问（DashScope）兜底
 // - 流式响应内置 keep-alive 心跳，防止代理/Vercel 空闲掐断
-// - 推理模型 content 为空时回退 reasoning_content
+// - 推理模型的 reasoning_content 仅做前端展示，不计入最终输出
 // ═══════════════════════════════════════════════════════════════════════════
 
 const FIRST_TOKEN_TIMEOUT_MS = 20_000; // 建流（首 token）超时 → 触发切换
 const REQUEST_TIMEOUT_MS = 30_000; // 单通道请求超时
 const HEARTBEAT_INTERVAL_MS = 10_000; // SSE 心跳间隔
 
-const TEXT_MODEL_PRIMARY = process.env.AI_TEXT_MODEL_PRIMARY || 'deepseek-v4-pro';
+const TEXT_MODEL_PRIMARY = process.env.AI_TEXT_MODEL_PRIMARY || 'deepseek-chat';
 const TEXT_MODEL_FALLBACK = process.env.AI_TEXT_MODEL_FALLBACK || 'qwen3.7-max';
 const JSON_MODEL_PRIMARY = process.env.AI_JSON_MODEL_PRIMARY || 'deepseek-chat';
 const JSON_MODEL_FALLBACK = process.env.AI_JSON_MODEL_FALLBACK || 'qwen-turbo';
@@ -132,32 +132,55 @@ function buildFallbackStream(
       }, HEARTBEAT_INTERVAL_MS);
 
       let fullText = '';
+      let hasContent = false; // 是否有实际 content（区别于 reasoning_content）
+
+      /** 从流中读取内容，返回是否有实际 content */
+      async function readStream(stream: ChatStream): Promise<boolean> {
+        let gotContent = false;
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta as
+            | { content?: string; reasoning_content?: string }
+            | undefined;
+          const content = delta?.content || '';
+          const reasoning = delta?.reasoning_content || '';
+          if (content) {
+            fullText += content;
+            hasContent = true;
+            gotContent = true;
+            controller.enqueue(sseFrame({ type: 'text', content }));
+          } else if (reasoning) {
+            // 推理模型：前端展示推理过程，但不计入最终输出
+            controller.enqueue(sseFrame({ type: 'text', content: reasoning }));
+          }
+        }
+        return gotContent;
+      }
+
       try {
-        let stream: ChatStream;
         if (opts.vision) {
           // 视觉仅千问通道支持，直接兜底通道建流
-          stream = await openStream('qwen', VISION_MODEL, messages);
+          const stream = await openStream('qwen', VISION_MODEL, messages);
+          await readStream(stream);
         } else {
+          // 1. 主通道 DeepSeek
+          let primaryOk = false;
           try {
-            stream = await openStream('deepseek', TEXT_MODEL_PRIMARY, messages);
+            const stream = await openStream('deepseek', TEXT_MODEL_PRIMARY, messages);
+            primaryOk = await readStream(stream);
           } catch (primaryErr) {
             console.warn(
               '[ai-gateway] DeepSeek 通道失败，切换千问兜底:',
               primaryErr instanceof Error ? primaryErr.message : primaryErr,
             );
-            stream = await openStream('qwen', TEXT_MODEL_FALLBACK, messages);
           }
-        }
 
-        for await (const chunk of stream) {
-          const delta = chunk.choices[0]?.delta as
-            | { content?: string; reasoning_content?: string }
-            | undefined;
-          // 推理模型 content 为空时回退 reasoning_content，避免用户长时间无响应
-          const text = delta?.content || delta?.reasoning_content || '';
-          if (text) {
-            fullText += text;
-            controller.enqueue(sseFrame({ type: 'text', content: text }));
+          // 2. 主通道无实际 content（推理模型耗尽 token / 返回空）→ 千问兜底
+          if (!primaryOk) {
+            if (!hasContent) {
+              console.warn('[ai-gateway] DeepSeek 未返回实际内容，切换千问兜底');
+            }
+            const stream = await openStream('qwen', TEXT_MODEL_FALLBACK, messages);
+            await readStream(stream);
           }
         }
 
